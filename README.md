@@ -13,7 +13,7 @@ git push -u origin main
 
 ## 2. Supabase
 1. Create a project (Singapore region is closest to PH).
-2. Run the migration — either paste `supabase/migrations/20261006000000_quiz_responses.sql` into **SQL Editor → Run**, or with the CLI:
+2. Run the migration — either paste `supabase/migrations/20261006053640_quiz_responses.sql` into **SQL Editor → Run**, or with the CLI:
    ```bash
    supabase link --project-ref <ref>
    supabase db push
