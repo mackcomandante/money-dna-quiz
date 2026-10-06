@@ -9,7 +9,8 @@ S Guardian, C Architect. The design was finalised in a Claude Design canvas ("Op
 and ported 1:1 here.
 
 **Flow:** Intro → Profile (3 steps) → 20 questions with book-quote interstitials after Q4/8/12/16/20
-→ Results card → Email capture (with optional marketing opt-in) → Sent screen → hermes.exoasia.org.
+→ Results card → Email capture (with optional marketing opt-in) → Sent screen (download the Full Money DNA Report PDF,
+also attached to the email) → hermes.exoasia.org.
 
 ## Stack
 - Next.js 15 (App Router, React 19, TypeScript), plain CSS (`app/globals.css`), `next/font` (Bricolage Grotesque + DM Sans)
@@ -25,7 +26,10 @@ and ported 1:1 here.
 | `lib/validation.ts` | Profile/email validation (server re-validates everything) |
 | `components/Quiz.tsx` | The whole client flow as one state machine (`view` + indices) |
 | `app/api/responses/route.ts` | `POST` — save completed quiz, recompute scores, return `id` |
-| `app/api/responses/[id]/route.ts` | `PATCH` — attach email + opt-in (once, within 2h), send profile email |
+| `app/api/responses/[id]/route.ts` | `PATCH` — attach email + opt-in (once, within 2h), send profile email with the report PDF attached |
+| `app/api/report/[id]/route.ts` | `GET` — Full Money DNA Report PDF (only once an email is attached). Dev only: `/api/report/sample?type=D&view` |
+| `lib/report-content.ts` | Report text per type, adapted from book chapters 4–7, plus the "About Money DNA" intro |
+| `lib/report-pdf.tsx` | The PDF layout (`@react-pdf/renderer`); fonts and avatars in `public/report/` |
 | `app/api/health/route.ts` | Health check for Coolify / Docker |
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
 
@@ -55,6 +59,11 @@ docker build -t money-dna . && docker run -p 3000:3000 --env-file .env.local mon
 7. Rate limiter is in-memory (single container). Move to Redis/Upstash if Coolify runs >1 replica.
 8. Analytics events (start, profile done, each interstitial, completion, email submit, Hermes click).
 9. OG image for social sharing (`app/opengraph-image.tsx`).
+
+## Report PDF notes
+- Keep `serverExternalPackages` and `outputFileTracingIncludes` (pdfkit font data) in `next.config.mjs`, or the PDF fails in the standalone Docker build.
+- Avoid the react-pdf `break` prop; it crashed layout for some content lengths. New pages are separate `<Page>` elements.
+- Fonts are Latin-only WOFF subsets, so the ₱ sign won't render in the PDF; write "PHP" instead.
 
 ## Style rules
 - Colours/tokens are CSS variables at the top of `globals.css`. Type colours: D `#F26B4B`, I `#F5B841`, S `#3CC3A8`, C `#6F9BF2`.

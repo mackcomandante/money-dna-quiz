@@ -318,7 +318,7 @@ export default function Quiz() {
         <form className="screen" style={{ gap: 20 }} onSubmit={(e) => { e.preventDefault(); void submitEmail(); }} noValidate>
           <span className="kicker">Your full profile</span>
           <h1 className="h1" style={{ fontSize: 32 }}>Where should we send your Money DNA?</h1>
-          <p className="lead" style={{ fontSize: 15 }}>Your full {TYPES[result.primary].name} profile: your superpowers, your shadow, how you react under stress, and the money moves that work for your type.</p>
+          <p className="lead" style={{ fontSize: 15 }}>Get your Full Money DNA Report for {TYPES[result.primary].name}: your superpowers, your shadow, how you react under stress, your Blueprint and coaching questions. We&apos;ll email it to you as a PDF, and you can download it right away.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label htmlFor="mdna-email" className="label">Your best email</label>
             <input
@@ -349,8 +349,14 @@ export default function Quiz() {
         <section className="screen" style={{ gap: 20 }}>
           <div className="grow" />
           <span className="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg></span>
-          <h1 className="h1" style={{ fontSize: 32 }}>Your profile is on its way.</h1>
-          <p className="lead">Check <b style={{ color: 'var(--text)' }}>{email.trim()}</b> in the next few minutes. Not there? Look in your spam or promotions folder.</p>
+          <h1 className="h1" style={{ fontSize: 32 }}>Your report is ready.</h1>
+          <p className="lead">We&apos;ve also sent it to <b style={{ color: 'var(--text)' }}>{email.trim()}</b>. Not there in a few minutes? Look in your spam or promotions folder.</p>
+          {responseId && (
+            <a className="btn-outline" href={`/api/report/${responseId}`} download>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+              Download my Full Money DNA Report (PDF)
+            </a>
+          )}
           <div className="next">
             <span className="kicker">Your next step</span>
             <strong>Your full profile is also waiting in the Hermes app.</strong>

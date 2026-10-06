@@ -76,6 +76,11 @@ a:hover { color: #FFD27A; }
   width: 56px; height: 56px; flex: none; border-radius: 16px; border: 2px solid var(--line);
   background: transparent; color: var(--soft); cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
+.btn-outline {
+  height: 52px; border-radius: 16px; border: 2px solid var(--amber); background: transparent; color: var(--amber);
+  font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none;
+}
+.btn-outline:hover { background: rgba(245, 184, 65, 0.1); color: #FFD27A; }
 .btn-text { height: 48px; border: none; background: transparent; color: var(--soft); font-weight: 600; font-size: 15px; cursor: pointer; }
 .center { text-align: center; }
 

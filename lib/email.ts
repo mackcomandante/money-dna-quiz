@@ -28,6 +28,7 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores): string {
       <p style="margin:0 0 18px;font:400 16px/1.55 Arial,sans-serif;color:#C9D4E3">${esc(t.summary)}</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
     </td></tr>
+    <tr><td style="padding:24px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3"><b style="color:#FFFFFF">Your Full Money DNA Report is attached.</b> It covers how you handle money, your superpowers and shadow, how you react under stress, your ${esc(t.short)} Blueprint and coaching questions.</td></tr>
     <tr><td style="padding:24px 4px 0;font:700 16px Arial,sans-serif;color:#F5B841">Where your type gets stuck</td></tr>
     <tr><td style="padding:8px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3">${esc(t.stuck)}</td></tr>
     <tr><td style="padding:20px 4px 0;font:700 16px Arial,sans-serif;color:#3CC3A8">Your first move</td></tr>
@@ -44,7 +45,9 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores): string {
 }
 
 /** Sends via Resend's REST API. Returns false (without throwing) if email isn't configured or fails. */
-export async function sendProfileEmail(to: string, primary: TypeKey, scores: Scores): Promise<boolean> {
+export interface EmailAttachment { filename: string; content: Buffer }
+
+export async function sendProfileEmail(to: string, primary: TypeKey, scores: Scores, attachment?: EmailAttachment): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!key || !from) {
@@ -61,6 +64,7 @@ export async function sendProfileEmail(to: string, primary: TypeKey, scores: Sco
         reply_to: process.env.EMAIL_REPLY_TO || undefined,
         subject: `Your Money DNA: ${TYPES[primary].name}`,
         html: profileEmailHtml(primary, scores),
+        attachments: attachment ? [{ filename: attachment.filename, content: attachment.content.toString('base64') }] : undefined,
       }),
     });
     if (!res.ok) console.error('[email] Resend error', res.status, await res.text());
