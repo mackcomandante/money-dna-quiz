@@ -12,7 +12,7 @@ export function hermesUrl(): string {
   return u.toString();
 }
 
-export function profileEmailHtml(primary: TypeKey, scores: Scores): string {
+export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = false): string {
   const t = TYPES[primary];
   const pct = percentages(scores);
   const rows = TYPE_ORDER.map((k) => `
@@ -22,6 +22,7 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0F1B2D"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
     <tr><td style="font:800 20px Arial,sans-serif;color:#F2F5F9;padding-bottom:24px">Money DNA</td></tr>
+    ${resend ? '<tr><td style="padding:0 4px 18px;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3">Someone asked us to send your Money DNA report to this address again. Here is your original result. If that wasn\'t you, you can ignore this email.</td></tr>' : ''}
     <tr><td style="background:#17263D;border:2px solid #24364F;border-radius:20px;padding:24px">
       <span style="display:inline-block;padding:6px 12px;border-radius:14px;background:${t.color};color:#0F1B2D;font:800 12px Arial,sans-serif;letter-spacing:.06em">MONEY DNA · ${primary}</span>
       <h1 style="margin:14px 0 10px;font:800 30px Arial,sans-serif;color:#FFFFFF">${esc(t.name)}</h1>
@@ -47,7 +48,9 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores): string {
 /** Sends via Resend's REST API. Returns false (without throwing) if email isn't configured or fails. */
 export interface EmailAttachment { filename: string; content: Buffer }
 
-export async function sendProfileEmail(to: string, primary: TypeKey, scores: Scores, attachment?: EmailAttachment): Promise<boolean> {
+export async function sendProfileEmail(
+  to: string, primary: TypeKey, scores: Scores, attachment?: EmailAttachment, opts: { resend?: boolean } = {},
+): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!key || !from) {
@@ -62,8 +65,8 @@ export async function sendProfileEmail(to: string, primary: TypeKey, scores: Sco
         from,
         to: [to],
         reply_to: process.env.EMAIL_REPLY_TO || undefined,
-        subject: `Your Money DNA: ${TYPES[primary].name}`,
-        html: profileEmailHtml(primary, scores),
+        subject: opts.resend ? `Your Money DNA report, sent again: ${TYPES[primary].name}` : `Your Money DNA: ${TYPES[primary].name}`,
+        html: profileEmailHtml(primary, scores, opts.resend),
         attachments: attachment ? [{ filename: attachment.filename, content: attachment.content.toString('base64') }] : undefined,
       }),
     });

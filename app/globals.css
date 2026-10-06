@@ -143,6 +143,7 @@ a:hover { color: #FFD27A; }
 }
 .input:focus { border-color: var(--amber); outline: none; }
 .error { font-size: 13px; font-weight: 600; color: var(--coral); }
+.notice { font-size: 14px; line-height: 1.5; padding: 12px 14px; border-radius: 14px; background: rgba(60, 195, 168, 0.12); border: 2px solid var(--teal); color: var(--text); }
 .optin { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); cursor: pointer; }
 .optin input { flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--amber); }
 .optin span { font-size: 14px; line-height: 1.5; }

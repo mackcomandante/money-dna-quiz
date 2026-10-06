@@ -39,6 +39,7 @@ also attached to the email) → hermes.exoasia.org.
 - Never put email or other PII in URLs (the Hermes link only carries UTM params).
 - Philippine Data Privacy Act (RA 10173) applies: a real privacy notice must be linked via `NEXT_PUBLIC_PRIVACY_URL` before launch.
 - The server ignores client-sent scores and recomputes them.
+- **One assessment per email.** A second assessment with a used email gets "That email is already associated with a previous assessment." (409). Enforced in the PATCH route and by the unique index on `lower(email)`. The repeat email gets its **original** report re-sent to that inbox, **once per email ever** (`report_resent_at`, claimed atomically; released if the send fails). The original result is never shown in the browser.
 
 ## Commands
 ```bash

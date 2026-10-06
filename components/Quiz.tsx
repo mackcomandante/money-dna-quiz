@@ -45,6 +45,7 @@ export default function Quiz() {
   const [website, setWebsite] = useState(''); // honeypot
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
   // Move focus to the top of each new screen for keyboard and screen-reader users.
@@ -130,7 +131,7 @@ export default function Quiz() {
 
   function restart() {
     setI(0); setSel(null); setAnswers([]); setOnQuote(false);
-    setResponseId(null); setError(null); setTouched(false);
+    setResponseId(null); setError(null); setNotice(null); setTouched(false);
     setView('quiz');
   }
 
@@ -138,6 +139,7 @@ export default function Quiz() {
     if (!emailOk || submitting || !result) return;
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const id = responseId ?? (await saveResponse(answers));
       if (!id) throw new Error('Could not save your answers. Check your connection and try again.');
@@ -148,6 +150,7 @@ export default function Quiz() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (data.notice) { setNotice(data.error); return; }
         throw new Error(data.error || 'Could not send your profile. Try again.');
       }
       setView('sent');
@@ -323,7 +326,7 @@ export default function Quiz() {
             <label htmlFor="mdna-email" className="label">Your best email</label>
             <input
               id="mdna-email" className="input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com"
-              value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setTouched(true)}
+              value={email} onChange={(e) => { setEmail(e.target.value); setNotice(null); }} onBlur={() => setTouched(true)}
               aria-invalid={touched && !!email && !emailOk} aria-describedby="mdna-email-error"
             />
             {touched && email && !emailOk && <span id="mdna-email-error" className="error">Please enter a valid email address.</span>}
@@ -336,6 +339,7 @@ export default function Quiz() {
             <label>Website<input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} /></label>
           </div>
           {error && <span className="error" role="alert">{error}</span>}
+          {notice && <span className="notice" role="status">{notice}</span>}
           <div className="grow" />
           <span className="fine">We&apos;ll only use your email as described.{PRIVACY_URL && <> <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a></>}</span>
           <div className="row">
