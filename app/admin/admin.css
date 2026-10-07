@@ -59,3 +59,5 @@
 .adm-login input { height: 48px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--ink); color: var(--text); font-size: 16px; }
 .adm-login input:focus { border-color: var(--amber); outline: none; }
 .adm-empty { padding: 28px; text-align: center; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 16px; }
+.adm-table a.adm-dl-link { color: var(--amber); font-weight: 700; white-space: nowrap; }
+.adm-table a.adm-dl-link:hover { color: #FFD27A; }

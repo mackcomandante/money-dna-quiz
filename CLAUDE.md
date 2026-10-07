@@ -10,7 +10,7 @@ and ported 1:1 here.
 
 **Flow:** Intro (4 screens) → Profile (5 steps) → 20 questions with book-quote interstitials after Q4/8/12/16/20 (quotes with a stat show it on its own screen first)
 → Results card → "Your full report" offer → Name + email capture (with optional marketing opt-in) → Sent screen
-→ hermes.exoasia.org. The Full Money DNA Report PDF is delivered **only by email (and Hermes)**; it is never downloadable from this site.
+→ hermes.exoasia.org. The Full Money DNA Report PDF is delivered **only by email (and Hermes)**; quiz takers can never download it from this site (signed-in admins can, from /admin).
 
 ## Stack
 - Next.js 15 (App Router, React 19, TypeScript), plain CSS (`app/globals.css`), `next/font` (Bricolage Grotesque + DM Sans)
@@ -31,7 +31,7 @@ and ported 1:1 here.
 | `lib/report-content.ts` | Report text per type, adapted from book chapters 4–7, plus the "About Money DNA" intro |
 | `lib/report-pdf.tsx` | The PDF layout (`@react-pdf/renderer`); fonts and avatars in `public/report/` |
 | `app/api/health/route.ts` | Health check for Coolify / Docker |
-| `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`) |
+| `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`), per-person report PDF (`/api/admin/report/[id]`, admin only) |
 | `lib/admin-auth.ts` / `lib/admin-data.ts` | Admin session (single `ADMIN_PASSWORD`, signed HttpOnly cookie, 8h) and the queries/aggregation behind the dashboard |
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
 

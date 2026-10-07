@@ -20,6 +20,7 @@ export default async function Submission({ params }: { params: Promise<{ id: str
         <h1 style={{ marginTop: 8 }}>{r.full_name || r.email || 'Anonymous submission'}</h1>
         <p className="adm-sub">{formatDate(r.created_at)}</p>
       </div>
+      <div><a className="adm-btn" href={`/api/admin/report/${r.id}`} download>Download Full Money DNA Report (PDF)</a></div>
 
       <section className="adm-grid">
         <div className="adm-card">

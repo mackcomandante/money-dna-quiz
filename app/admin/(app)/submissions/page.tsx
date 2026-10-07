@@ -53,7 +53,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
         <div className="adm-table-wrap">
           <table className="adm-table">
             <thead>
-              <tr><th>Submitted</th><th>Name</th><th>Email</th><th>Money DNA</th><th>D · I · S · C</th><th>Age</th><th>How they earn</th><th>Opt-in</th><th>Report</th></tr>
+              <tr><th>Submitted</th><th>Name</th><th>Email</th><th>Money DNA</th><th>D · I · S · C</th><th>Age</th><th>How they earn</th><th>Opt-in</th><th>Report</th><th>PDF</th></tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -67,6 +67,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
                   <td>{r.employment}</td>
                   <td>{r.email_opt_in ? 'Yes' : <span className="adm-muted">No</span>}</td>
                   <td>{r.email_sent_at ? `Sent${r.report_resent_at ? ' + re-sent' : ''}` : <span className="adm-muted">—</span>}</td>
+                  <td><a className="adm-dl-link" href={`/api/admin/report/${r.id}`} download>Download</a></td>
                 </tr>
               ))}
             </tbody>

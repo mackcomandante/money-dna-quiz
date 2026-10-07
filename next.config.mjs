@@ -9,6 +9,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/report/[id]': ['./node_modules/pdfkit/js/**/*'], // dev-only samples
     '/api/responses/[id]': ['./node_modules/pdfkit/js/**/*'],
+    '/api/admin/report/[id]': ['./node_modules/pdfkit/js/**/*'],
   },
 };
 export default nextConfig;
