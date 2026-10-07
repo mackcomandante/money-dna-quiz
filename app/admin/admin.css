@@ -1,0 +1,61 @@
+/* Admin area. Desktop-first; unlike the public quiz, these pages scroll. */
+.adm { min-height: 100dvh; max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; display: flex; flex-direction: column; gap: 22px; }
+.adm-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.adm-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.adm-nav a, .adm-nav button { padding: 8px 12px; border-radius: 10px; color: var(--soft); font-size: 14px; font-weight: 600; text-decoration: none; background: none; border: none; cursor: pointer; }
+.adm-nav a:hover, .adm-nav button:hover { background: var(--surface); color: var(--text); }
+.adm h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: -0.02em; }
+.adm h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 700; font-size: 18px; }
+.adm-sub { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.adm-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.adm-pill { padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--soft); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.adm-pill:hover { color: var(--text); border-color: var(--muted); }
+.adm-pill.on { background: var(--amber); border-color: var(--amber); color: var(--ink); }
+.adm-pill i { width: 9px; height: 9px; border-radius: 50%; }
+.adm-sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+.adm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.adm-kpi { padding: 16px; border-radius: 16px; background: var(--surface); border: 1.5px solid var(--line); }
+.adm-kpi span { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+.adm-kpi b { display: block; margin-top: 6px; font-family: var(--display); font-size: 28px; font-weight: 800; }
+.adm-kpi small { color: var(--muted); font-size: 12px; }
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.adm-card { padding: 18px; border-radius: 16px; background: var(--surface); border: 1.5px solid var(--line); min-width: 0; }
+.adm-card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 700; }
+.adm-card h3 small { font-weight: 500; color: var(--muted); }
+.adm-bars { display: flex; flex-direction: column; gap: 8px; }
+.adm-bar { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 10px; align-items: center; font-size: 13px; }
+.adm-bar .lbl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adm-bar .lbl span { overflow: hidden; text-overflow: ellipsis; }
+.adm-bar .track { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.adm-bar .fill { height: 100%; border-radius: 4px; background: var(--amber); }
+.adm-bar .num { text-align: right; color: var(--soft); font-variant-numeric: tabular-nums; }
+.adm-bar .num b { color: var(--text); }
+.adm-daily { display: flex; align-items: flex-end; gap: 3px; height: 150px; }
+.adm-daily div { flex: 1; min-width: 3px; background: var(--amber); border-radius: 3px 3px 0 0; }
+.adm-daily-axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.adm-q { padding: 16px 0; border-top: 1px solid var(--line); }
+.adm-q:first-of-type { border-top: none; padding-top: 0; }
+.adm-q p { margin: 0 0 10px; font-weight: 600; font-size: 14px; }
+.adm-q p span { color: var(--muted); font-weight: 500; }
+.adm-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--ink); }
+.adm-table-wrap { overflow-x: auto; border-radius: 16px; border: 1.5px solid var(--line); }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.adm-table th { text-align: left; padding: 10px 12px; font-size: 12px; color: var(--muted); font-weight: 600; background: var(--surface); white-space: nowrap; }
+.adm-table td { padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.adm-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+.adm-table a { color: var(--text); font-weight: 600; text-decoration: none; }
+.adm-table a:hover { color: var(--amber); }
+.adm-muted { color: var(--muted); }
+.adm-search { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-search input { height: 40px; min-width: 260px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font-size: 14px; }
+.adm-btn { height: 40px; padding: 0 16px; border-radius: 10px; border: none; background: var(--amber); color: var(--ink); font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+.adm-btn.ghost { background: transparent; border: 1.5px solid var(--line); color: var(--soft); }
+.adm-pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; font-size: 13px; color: var(--muted); }
+.adm-dl { display: grid; grid-template-columns: minmax(110px, 38%) minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 14px; }
+.adm-dl dt { color: var(--muted); }
+.adm-dl dd { margin: 0; overflow-wrap: anywhere; }
+.adm-login { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.adm-login form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 20px; background: var(--surface); border: 1.5px solid var(--line); }
+.adm-login input { height: 48px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--ink); color: var(--text); font-size: 16px; }
+.adm-login input:focus { border-color: var(--amber); outline: none; }
+.adm-empty { padding: 28px; text-align: center; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 16px; }

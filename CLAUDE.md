@@ -31,6 +31,8 @@ and ported 1:1 here.
 | `lib/report-content.ts` | Report text per type, adapted from book chapters 4–7, plus the "About Money DNA" intro |
 | `lib/report-pdf.tsx` | The PDF layout (`@react-pdf/renderer`); fonts and avatars in `public/report/` |
 | `app/api/health/route.ts` | Health check for Coolify / Docker |
+| `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`) |
+| `lib/admin-auth.ts` / `lib/admin-data.ts` | Admin session (single `ADMIN_PASSWORD`, signed HttpOnly cookie, 8h) and the queries/aggregation behind the dashboard |
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
 
 ## Data & privacy rules (do not break)
@@ -39,6 +41,7 @@ and ported 1:1 here.
 - Never put email or other PII in URLs (the Hermes link only carries UTM params).
 - Philippine Data Privacy Act (RA 10173) applies: a real privacy notice must be linked via `NEXT_PUBLIC_PRIVACY_URL` before launch.
 - The server ignores client-sent scores and recomputes them.
+- `/admin` shows names and emails. It requires `ADMIN_PASSWORD` (unset = admin disabled); every admin page calls `requireAdmin()` and every admin API checks `isAdminRequest()`. Pages are `noindex`.
 - **One assessment per email.** A second assessment with a used email gets "That email is already associated with a previous assessment." (409). Enforced in the PATCH route and by the unique index on `lower(email)`. The repeat email gets its **original** report re-sent to that inbox, **once per email ever** (`report_resent_at`, claimed atomically; released if the send fails). The original result is never shown in the browser.
 
 ## Commands
@@ -68,6 +71,6 @@ docker build -t money-dna . && docker run -p 3000:3000 --env-file .env.local mon
 
 ## Style rules
 - Colours/tokens are CSS variables at the top of `globals.css`. Type colours: D `#F26B4B`, I `#F5B841`, S `#3CC3A8`, C `#6F9BF2`.
-- **No scrolling, ever.** Every screen must fit a 375 × 667 phone (iPhone SE) without scrolling down. If content doesn't fit, split it into more screens; don't cut it.
+- **No scrolling, ever** (public quiz). Every quiz screen must fit a 375 × 667 phone (iPhone SE) without scrolling down. If content doesn't fit, split it into more screens; don't cut it. The `/admin` area is exempt.
 - Keep it one column, max-width 480px, touch targets ≥ 44px, visible focus, `prefers-reduced-motion` respected.
 - Copy is sentence case, plain verbs. Book quotes are attributed "Mack Comandante, *Money DNA*".
