@@ -8,6 +8,15 @@ export function isValidEmail(email: unknown): email is string {
   return typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email.trim());
 }
 
+/** Trims and collapses spaces in a full name. Returns null unless it's 2–100 characters with at least one letter. */
+export function cleanName(name: unknown): string | null {
+  if (typeof name !== 'string') return null;
+  const n = name.replace(/\s+/g, ' ').trim();
+  return n.length >= 2 && n.length <= 100 && /\p{L}/u.test(n) ? n : null;
+}
+
+export const firstName = (fullName: string | null | undefined) => (fullName || '').split(' ')[0] || '';
+
 /** Keeps only known fields with allowed option values. Returns null if anything required is missing. */
 export function cleanProfile(input: unknown): Profile | null {
   if (!input || typeof input !== 'object') return null;

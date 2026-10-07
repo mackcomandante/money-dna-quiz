@@ -7,7 +7,7 @@ const nextConfig = {
   serverExternalPackages: ['@react-pdf/renderer'],
   // pdfkit loads its built-in font metrics dynamically, so standalone tracing misses them.
   outputFileTracingIncludes: {
-    '/api/report/[id]': ['./node_modules/pdfkit/js/**/*'],
+    '/api/report/[id]': ['./node_modules/pdfkit/js/**/*'], // dev-only samples
     '/api/responses/[id]': ['./node_modules/pdfkit/js/**/*'],
   },
 };

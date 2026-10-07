@@ -8,9 +8,9 @@ A mobile-first web app for the **Money DNA Quiz**, Mack Comandante's money-perso
 S Guardian, C Architect. The design was finalised in a Claude Design canvas ("Option 1 — Genome")
 and ported 1:1 here.
 
-**Flow:** Intro → Profile (3 steps) → 20 questions with book-quote interstitials after Q4/8/12/16/20
-→ Results card → Email capture (with optional marketing opt-in) → Sent screen (download the Full Money DNA Report PDF,
-also attached to the email) → hermes.exoasia.org.
+**Flow:** Intro (4 screens) → Profile (5 steps) → 20 questions with book-quote interstitials after Q4/8/12/16/20 (quotes with a stat show it on its own screen first)
+→ Results card → "Your full report" offer → Name + email capture (with optional marketing opt-in) → Sent screen
+→ hermes.exoasia.org. The Full Money DNA Report PDF is delivered **only by email (and Hermes)**; it is never downloadable from this site.
 
 ## Stack
 - Next.js 15 (App Router, React 19, TypeScript), plain CSS (`app/globals.css`), `next/font` (Bricolage Grotesque + DM Sans)
@@ -26,8 +26,8 @@ also attached to the email) → hermes.exoasia.org.
 | `lib/validation.ts` | Profile/email validation (server re-validates everything) |
 | `components/Quiz.tsx` | The whole client flow as one state machine (`view` + indices) |
 | `app/api/responses/route.ts` | `POST` — save completed quiz, recompute scores, return `id` |
-| `app/api/responses/[id]/route.ts` | `PATCH` — attach email + opt-in (once, within 2h), send profile email with the report PDF attached |
-| `app/api/report/[id]/route.ts` | `GET` — Full Money DNA Report PDF (only once an email is attached). Dev only: `/api/report/sample?type=D&view` |
+| `app/api/responses/[id]/route.ts` | `PATCH` — attach full name + email + opt-in (once, within 2h), send profile email with the report PDF attached |
+| `app/api/report/[id]/route.ts` | Dev only: `/api/report/sample?type=D&view` renders a sample report. Always 404 in production |
 | `lib/report-content.ts` | Report text per type, adapted from book chapters 4–7, plus the "About Money DNA" intro |
 | `lib/report-pdf.tsx` | The PDF layout (`@react-pdf/renderer`); fonts and avatars in `public/report/` |
 | `app/api/health/route.ts` | Health check for Coolify / Docker |
@@ -68,5 +68,6 @@ docker build -t money-dna . && docker run -p 3000:3000 --env-file .env.local mon
 
 ## Style rules
 - Colours/tokens are CSS variables at the top of `globals.css`. Type colours: D `#F26B4B`, I `#F5B841`, S `#3CC3A8`, C `#6F9BF2`.
+- **No scrolling, ever.** Every screen must fit a 375 × 667 phone (iPhone SE) without scrolling down. If content doesn't fit, split it into more screens; don't cut it.
 - Keep it one column, max-width 480px, touch targets ≥ 44px, visible focus, `prefers-reduced-motion` respected.
 - Copy is sentence case, plain verbs. Book quotes are attributed "Mack Comandante, *Money DNA*".

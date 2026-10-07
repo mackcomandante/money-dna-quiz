@@ -12,7 +12,7 @@ export function hermesUrl(): string {
   return u.toString();
 }
 
-export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = false): string {
+export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = false, name = ''): string {
   const t = TYPES[primary];
   const pct = percentages(scores);
   const rows = TYPE_ORDER.map((k) => `
@@ -22,6 +22,7 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = fals
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0F1B2D"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
     <tr><td style="font:800 20px Arial,sans-serif;color:#F2F5F9;padding-bottom:24px">Money DNA</td></tr>
+    ${name ? `<tr><td style="padding:0 4px 14px;font:700 17px Arial,sans-serif;color:#FFFFFF">Hi ${esc(name)},</td></tr>` : ''}
     ${resend ? '<tr><td style="padding:0 4px 18px;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3">Someone asked us to send your Money DNA report to this address again. Here is your original result. If that wasn\'t you, you can ignore this email.</td></tr>' : ''}
     <tr><td style="background:#17263D;border:2px solid #24364F;border-radius:20px;padding:24px">
       <span style="display:inline-block;padding:6px 12px;border-radius:14px;background:${t.color};color:#0F1B2D;font:800 12px Arial,sans-serif;letter-spacing:.06em">MONEY DNA · ${primary}</span>
@@ -29,15 +30,15 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = fals
       <p style="margin:0 0 18px;font:400 16px/1.55 Arial,sans-serif;color:#C9D4E3">${esc(t.summary)}</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
     </td></tr>
-    <tr><td style="padding:24px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3"><b style="color:#FFFFFF">Your Full Money DNA Report is attached.</b> It covers how you handle money, your superpowers and shadow, how you react under stress, your ${esc(t.short)} Blueprint and coaching questions.</td></tr>
+    <tr><td style="padding:24px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3"><b style="color:#FFFFFF">${name ? `${esc(name)}, your` : 'Your'} Full Money DNA Report is attached.</b> It covers how you handle money, your superpowers and shadow, how you react under stress, your ${esc(t.short)} Blueprint and coaching questions.</td></tr>
     <tr><td style="padding:24px 4px 0;font:700 16px Arial,sans-serif;color:#F5B841">Where your type gets stuck</td></tr>
     <tr><td style="padding:8px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3">${esc(t.stuck)}</td></tr>
     <tr><td style="padding:20px 4px 0;font:700 16px Arial,sans-serif;color:#3CC3A8">Your first move</td></tr>
     <tr><td style="padding:8px 4px 0;font:400 15px/1.55 Arial,sans-serif;color:#C9D4E3">${esc(t.move)}</td></tr>
     <tr><td style="padding:28px 0 0">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #F5B841;border-radius:18px"><tr><td style="padding:20px">
-        <p style="margin:0 0 6px;font:700 18px Arial,sans-serif;color:#FFFFFF">Your full profile is also waiting in the Hermes app.</p>
-        <p style="margin:0 0 16px;font:400 14px/1.5 Arial,sans-serif;color:#C9D4E3">Create your free account to open it anytime, then turn your Money DNA into your Financial Wellness Roadmap.</p>
+        <p style="margin:0 0 6px;font:700 18px Arial,sans-serif;color:#FFFFFF">Turn your Money DNA into your Financial Wellness Roadmap.</p>
+        <p style="margin:0 0 16px;font:400 14px/1.5 Arial,sans-serif;color:#C9D4E3">Your full profile is also waiting in the Hermes app. Create your free account to open it anytime.</p>
         <a href="${esc(hermesUrl())}" style="display:inline-block;padding:14px 22px;border-radius:14px;background:#F5B841;color:#0F1B2D;font:700 15px Arial,sans-serif;text-decoration:none">Create my free Hermes account</a>
       </td></tr></table>
     </td></tr>
@@ -49,7 +50,7 @@ export function profileEmailHtml(primary: TypeKey, scores: Scores, resend = fals
 export interface EmailAttachment { filename: string; content: Buffer }
 
 export async function sendProfileEmail(
-  to: string, primary: TypeKey, scores: Scores, attachment?: EmailAttachment, opts: { resend?: boolean } = {},
+  to: string, primary: TypeKey, scores: Scores, attachment?: EmailAttachment, opts: { resend?: boolean; firstName?: string } = {},
 ): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
@@ -65,8 +66,8 @@ export async function sendProfileEmail(
         from,
         to: [to],
         reply_to: process.env.EMAIL_REPLY_TO || undefined,
-        subject: opts.resend ? `Your Money DNA report, sent again: ${TYPES[primary].name}` : `Your Money DNA: ${TYPES[primary].name}`,
-        html: profileEmailHtml(primary, scores, opts.resend),
+        subject: `${opts.firstName ? `${opts.firstName}, your` : 'Your'} Money DNA${opts.resend ? ' report, sent again' : ''}: ${TYPES[primary].name}`,
+        html: profileEmailHtml(primary, scores, opts.resend, opts.firstName),
         attachments: attachment ? [{ filename: attachment.filename, content: attachment.content.toString('base64') }] : undefined,
       }),
     });

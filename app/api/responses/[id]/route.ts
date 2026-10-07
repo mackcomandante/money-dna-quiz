@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { isValidEmail } from '@/lib/validation';
+import { cleanName, firstName, isValidEmail } from '@/lib/validation';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { sendProfileEmail, type EmailAttachment } from '@/lib/email';
 import { renderReportPdf, reportFilename } from '@/lib/report-pdf';
@@ -11,7 +11,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const EDIT_WINDOW_MS = 2 * 60 * 60 * 1000; // email can be attached within 2h of finishing
 const EMAIL_TAKEN = 'That email is already associated with a previous assessment.';
 
-type ReportRow = { id: string; created_at: string; primary_type: string; score_d: number; score_i: number; score_s: number; score_c: number };
+type ReportRow = { id: string; created_at: string; full_name: string | null; primary_type: string; score_d: number; score_i: number; score_s: number; score_c: number };
 
 /** Renders the Full Money DNA Report for a stored response and emails it. Sends without the PDF if rendering fails. */
 async function emailReport(to: string, row: ReportRow, resend = false): Promise<boolean> {
@@ -19,11 +19,11 @@ async function emailReport(to: string, row: ReportRow, resend = false): Promise<
   const primary = row.primary_type as TypeKey;
   let report: EmailAttachment | undefined;
   try {
-    report = { filename: reportFilename(primary), content: await renderReportPdf({ primary, scores, date: new Date(row.created_at) }) };
+    report = { filename: reportFilename(primary), content: await renderReportPdf({ primary, scores, date: new Date(row.created_at), name: row.full_name }) };
   } catch (e) {
     console.error('[responses] report render failed; sending email without it', e);
   }
-  return sendProfileEmail(to, primary, scores, report, { resend });
+  return sendProfileEmail(to, primary, scores, report, { resend, firstName: firstName(row.full_name) });
 }
 
 /**
@@ -65,6 +65,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return Response.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
+  const fullName = cleanName(body.fullName);
+  if (!fullName) return Response.json({ error: 'Enter your full name' }, { status: 400 });
   if (!isValidEmail(body.email)) return Response.json({ error: 'Enter a valid email address' }, { status: 400 });
   const email = body.email.trim().toLowerCase();
   const optIn = body.optIn === true;
@@ -85,7 +87,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   // One assessment per email (emails are stored lowercased). The unique index on lower(email) also guards against races.
   const { data: original } = await db
     .from('quiz_responses')
-    .select('id, created_at, primary_type, score_d, score_i, score_s, score_c, report_resent_at')
+    .select('id, created_at, full_name, primary_type, score_d, score_i, score_s, score_c, report_resent_at')
     .eq('email', email)
     .neq('id', id)
     .maybeSingle();
@@ -95,6 +97,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { error: updErr } = await db
     .from('quiz_responses')
     .update({
+      full_name: fullName,
       email,
       email_submitted_at: now,
       email_opt_in: optIn,
@@ -110,7 +113,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return Response.json({ error: 'Could not save your email' }, { status: 500 });
   }
 
-  const sent = await emailReport(email, row);
+  const sent = await emailReport(email, { ...row, full_name: fullName });
   if (sent) await db.from('quiz_responses').update({ email_sent_at: new Date().toISOString() }).eq('id', id);
 
   return Response.json({ ok: true, sent });

@@ -124,15 +124,16 @@ export function readResult(primary: TypeKey, scores: Scores) {
   return { ranked, top, secondary, lowest, strength, isBlend, named, balanced };
 }
 
-export interface ReportInput { primary: TypeKey; scores: Scores; date?: Date }
+export interface ReportInput { primary: TypeKey; scores: Scores; date?: Date; name?: string | null }
 
-function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
+function ReportDocument({ primary, scores, date = new Date(), name }: ReportInput) {
   const k = primary;
   const t = TYPES[k];
   const r = REPORTS[k];
   const ax = TYPE_AXES[k];
   const pct = percentages(scores);
   const rr = readResult(k, scores);
+  const first = (name || '').trim().split(/\s+/)[0] || '';
   const dateLabel = date.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
   const hermes = 'https://hermes.exoasia.org/?utm_source=money-dna-quiz&utm_medium=pdf-report';
 
@@ -146,19 +147,19 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
         </View>
         <Image src={path.join(ASSETS, 'avatars', `${k}.jpg`)} style={{ width: 499, height: 380, objectFit: 'cover', borderRadius: 18 }} />
         <View style={{ marginTop: 30 }}>
-          <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: t.color, textTransform: 'uppercase' }}>Your Money DNA · {k}</Text>
+          <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: t.color, textTransform: 'uppercase' }}>{name ? `${name}'s Money DNA · ${k}` : `Your Money DNA · ${k}`}</Text>
           <Text style={{ fontFamily: 'Bricolage', fontWeight: 800, fontSize: 44, lineHeight: 1.05, marginTop: 6 }}>{t.name}</Text>
           <Text style={{ fontSize: 14, fontStyle: 'italic', color: C.navySoft, marginTop: 12, lineHeight: 1.45 }}>&ldquo;{r.tagline}&rdquo;</Text>
         </View>
         <View style={{ position: 'absolute', left: 48, right: 48, bottom: 44, flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#24364F', paddingTop: 12 }}>
-          <Text style={{ fontSize: 8.5, color: C.navyMuted }}>Prepared {dateLabel}</Text>
+          <Text style={{ fontSize: 8.5, color: C.navyMuted }}>{name ? `Prepared for ${name} · ${dateLabel}` : `Prepared ${dateLabel}`}</Text>
           <Text style={{ fontSize: 8.5, color: C.navyMuted }}>Adapted from Money DNA by Mack Comandante</Text>
         </View>
       </Page>
 
       {/* About the book */}
       <Page size="A4" style={s.page}>
-        <Chrome name={t.name} />
+        <Chrome name={name ? `${name} · ${t.name}` : t.name} />
         <Text style={[s.kicker, { color: SHADE[k].deep }]}>Introduction</Text>
         <Text style={[s.h1, { marginBottom: 14 }]}>{BOOK_INTRO.title}</Text>
         {BOOK_INTRO.paragraphs.map((p, n) => <Para key={n}>{p}</Para>)}
@@ -191,7 +192,7 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
 
       {/* Reading your results */}
       <Page size="A4" style={s.page}>
-        <Chrome name={t.name} />
+        <Chrome name={name ? `${name} · ${t.name}` : t.name} />
         <Text style={[s.kicker, { color: SHADE[k].deep }]}>Introduction</Text>
         <Text style={[s.h1, { marginBottom: 14 }]}>{READING_RESULTS.title}</Text>
         <Para><Text style={{ fontWeight: 700, color: C.ink }}>{READING_RESULTS.primary.title}</Text> {READING_RESULTS.primary.text}</Para>
@@ -217,9 +218,9 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
 
       {/* Summary and body */}
       <Page size="A4" style={s.page}>
-        <Chrome name={t.name} />
+        <Chrome name={name ? `${name} · ${t.name}` : t.name} />
         <Text style={[s.kicker, { color: SHADE[k].deep }]}>Summary</Text>
-        <Text style={[s.h1, { marginBottom: 14 }]}>Your Money DNA archetype</Text>
+        <Text style={[s.h1, { marginBottom: 14 }]}>{first ? `${first}, meet your Money DNA` : 'Your Money DNA archetype'}</Text>
 
         <View style={[s.panel, { backgroundColor: SHADE[k].tint, flexDirection: 'row' }]} wrap={false}>
           <Image src={path.join(ASSETS, 'avatars', `${k}.jpg`)} style={{ width: 92, height: 92, borderRadius: 46, objectFit: 'cover', marginRight: 16 }} />
@@ -342,7 +343,7 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
       </Page>
 
       <Page size="A4" style={s.page}>
-        <Chrome name={t.name} />
+        <Chrome name={name ? `${name} · ${t.name}` : t.name} />
         <Section k={k} kicker="Your plan" title={`The ${t.short} Blueprint`} first>
           <Text style={{ fontFamily: 'Bricolage', fontWeight: 700, fontSize: 13, color: C.ink, marginBottom: 12 }}>{r.blueprintIntro}</Text>
           {r.blueprint.map((x, n) => <Item key={x.title} k={k} marker={String(n + 1)} title={x.title} text={x.text} />)}
@@ -351,7 +352,7 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
       </Page>
 
       <Page size="A4" style={s.page}>
-        <Chrome name={t.name} />
+        <Chrome name={name ? `${name} · ${t.name}` : t.name} />
         <Section k={k} kicker="Reflect" title="Coaching questions" first>
           <Para style={{ color: C.soft }}>Take your time with these. Write your answers down, and come back to them in a few months.</Para>
           {r.coaching.map((q, n) => (
@@ -365,7 +366,7 @@ function ReportDocument({ primary, scores, date = new Date() }: ReportInput) {
 
       {/* Closing and CTA */}
       <Page size="A4" style={[s.page, { backgroundColor: C.ink, color: '#FFFFFF' }]}>
-        <Text style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: 1.4, color: t.color, textTransform: 'uppercase', marginTop: 20 }}>A word to the {t.short}</Text>
+        <Text style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: 1.4, color: t.color, textTransform: 'uppercase', marginTop: 20 }}>{first ? `A word to ${first}, the ${t.short}` : `A word to the ${t.short}`}</Text>
         <Text style={{ fontFamily: 'Bricolage', fontWeight: 700, fontSize: 15, lineHeight: 1.5, color: '#FFFFFF', marginTop: 10 }}>{r.closing}</Text>
         <Text style={{ fontSize: 9, color: C.navyMuted, marginTop: 10 }}>Mack Comandante, Money DNA</Text>
 

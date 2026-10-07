@@ -70,25 +70,34 @@ export interface ProfileField {
 }
 export type ProfileFieldId = 'gender' | 'age' | 'marital' | 'education' | 'employment' | 'dependents' | 'financiallyFree' | 'balanceHappiness' | 'worries';
 
+// Two questions per step (worries on its own) so every step fits a small phone without scrolling.
 export const PROFILE_STEPS: { kicker: string; title: string; fields: ProfileField[] }[] = [
   {
-    kicker: 'Step 1 of 3 · About you', title: 'First, a little about you', fields: [
+    kicker: 'Step 1 of 5 · About you', title: 'First, a little about you', fields: [
       { id: 'gender', label: 'Gender', options: ['Female', 'Male', 'Prefer not to say'] },
       { id: 'age', label: 'Age', options: ['18–24', '25–34', '35–44', '45–54', '55+'] },
+    ],
+  },
+  {
+    kicker: 'Step 2 of 5 · About you', title: 'Your life right now', fields: [
       { id: 'marital', label: 'Marital status', options: ['Single', 'Married', 'Live-in', 'Separated', 'Widowed'] },
       { id: 'education', label: 'Highest educational attainment', options: ['High school', 'Vocational', 'College', "Master's", 'Doctorate'] },
     ],
   },
   {
-    kicker: 'Step 2 of 3 · Your money today', title: 'Now, where you stand', fields: [
+    kicker: 'Step 3 of 5 · Your money today', title: 'How you earn', fields: [
       { id: 'employment', label: 'How you earn', options: ['Employed', 'Business owner', 'Freelance', 'OFW', 'Not working'] },
       { id: 'dependents', label: 'People who depend on you financially', options: ['None', '1–2', '3–4', '5+'] },
+    ],
+  },
+  {
+    kicker: 'Step 4 of 5 · Your money today', title: 'Now, where you stand', fields: [
       { id: 'financiallyFree', label: 'Are you financially free?', options: ['Yes', 'Getting there', 'Not yet'] },
       { id: 'balanceHappiness', label: 'How happy are you with your bank balance?', options: ['1', '2', '3', '4', '5'], scale: { low: 'Not at all', high: 'Very happy' } },
     ],
   },
   {
-    kicker: 'Step 3 of 3 · Your worries', title: 'What keeps you up at night about money?', fields: [
+    kicker: 'Step 5 of 5 · Your worries', title: 'What keeps you up at night about money?', fields: [
       { id: 'worries', label: 'Pick all that apply', multi: true, options: ['Making ends meet', 'Paying off debts', 'Emergencies, illness or accidents', "My children's education costs", 'Sustaining my retirement', 'Supporting parents or family', 'Losing my job or income', 'Not growing my wealth fast enough', 'None — I feel secure'] },
     ],
   },
