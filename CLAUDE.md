@@ -31,7 +31,7 @@ and ported 1:1 here.
 | `lib/report-content.ts` | Report text per type, adapted from book chapters 4–7, plus the "About Money DNA" intro |
 | `lib/report-pdf.tsx` | The PDF layout (`@react-pdf/renderer`); fonts and avatars in `public/report/` |
 | `app/api/health/route.ts` | Health check for Coolify / Docker |
-| `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`), per-person report PDF (`/api/admin/report/[id]`, admin only) |
+| `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`), per-person report PDF (`/api/admin/report/[id]`, admin only, and only for submissions with a full name and email) |
 | `lib/admin-auth.ts` / `lib/admin-data.ts` | Admin session (single `ADMIN_PASSWORD`, signed HttpOnly cookie, 8h) and the queries/aggregation behind the dashboard |
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
 

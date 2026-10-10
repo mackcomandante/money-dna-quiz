@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { formatDate, getResponse } from '@/lib/admin-data';
+import { formatDate, getResponse, hasReport } from '@/lib/admin-data';
 import { QUESTIONS, TYPES, TYPE_ORDER } from '@/lib/quiz-data';
 import { percentages } from '@/lib/scoring';
 
@@ -20,7 +20,9 @@ export default async function Submission({ params }: { params: Promise<{ id: str
         <h1 style={{ marginTop: 8 }}>{r.full_name || r.email || 'Anonymous submission'}</h1>
         <p className="adm-sub">{formatDate(r.created_at)}</p>
       </div>
-      <div><a className="adm-btn" href={`/api/admin/report/${r.id}`} download>Download Full Money DNA Report (PDF)</a></div>
+      {hasReport(r)
+        ? <div><a className="adm-btn" href={`/api/admin/report/${r.id}`} download>Download Full Money DNA Report (PDF)</a></div>
+        : <div className="adm-empty" style={{ padding: 14, textAlign: 'left' }}>No report: {r.email ? 'this submission has no full name (it was made before names were collected).' : 'this person finished the quiz but did not give their name and email.'}</div>}
 
       <section className="adm-grid">
         <div className="adm-card">

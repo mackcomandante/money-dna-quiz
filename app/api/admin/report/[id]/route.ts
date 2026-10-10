@@ -1,5 +1,5 @@
 import { isAdminRequest } from '@/lib/admin-auth';
-import { getResponse } from '@/lib/admin-data';
+import { getResponse, hasReport } from '@/lib/admin-data';
 import { renderReportPdf, reportFilename } from '@/lib/report-pdf';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!isAdminRequest(req)) return Response.json({ error: 'Not signed in' }, { status: 401 });
   const r = await getResponse((await params).id);
   if (!r) return Response.json({ error: 'Not found' }, { status: 404 });
+  if (!hasReport(r)) return Response.json({ error: 'No report: this person did not give their full name and email.' }, { status: 409 });
 
   const pdf = await renderReportPdf({
     primary: r.primary_type,
@@ -17,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     date: new Date(r.created_at),
     name: r.full_name,
   });
-  const who = (r.full_name || r.email || r.id.slice(0, 8)).replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
+  const who = r.full_name!.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
   const filename = reportFilename(r.primary_type).replace(/\.pdf$/, `-${who}.pdf`);
   return new Response(new Uint8Array(pdf), {
     headers: {

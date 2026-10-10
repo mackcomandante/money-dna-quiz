@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatDate, listResponses, PAGE_SIZE, parseListFilters, RANGES, type ListFilters } from '@/lib/admin-data';
+import { formatDate, hasReport, listResponses, PAGE_SIZE, parseListFilters, RANGES, type ListFilters } from '@/lib/admin-data';
 import { TYPES, TYPE_ORDER } from '@/lib/quiz-data';
 
 export const dynamic = 'force-dynamic';
@@ -67,7 +67,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
                   <td>{r.employment}</td>
                   <td>{r.email_opt_in ? 'Yes' : <span className="adm-muted">No</span>}</td>
                   <td>{r.email_sent_at ? `Sent${r.report_resent_at ? ' + re-sent' : ''}` : <span className="adm-muted">—</span>}</td>
-                  <td><a className="adm-dl-link" href={`/api/admin/report/${r.id}`} download>Download</a></td>
+                  <td>{hasReport(r) ? <a className="adm-dl-link" href={`/api/admin/report/${r.id}`} download>Download</a> : <span className="adm-muted" title="No report without a full name and email">—</span>}</td>
                 </tr>
               ))}
             </tbody>

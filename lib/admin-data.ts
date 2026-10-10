@@ -169,6 +169,9 @@ export async function getResponse(id: string): Promise<ResponseRow | null> {
   return (data as ResponseRow) ?? null;
 }
 
+/** A report exists only for submissions that gave both a full name and an email, same rule as the quiz. */
+export const hasReport = (r: Pick<ResponseRow, 'full_name' | 'email'>) => !!(r.full_name && r.email);
+
 export function formatDate(iso: string | null): string {
   if (!iso) return '';
   return new Date(iso).toLocaleString('en-PH', { timeZone: TZ, year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
