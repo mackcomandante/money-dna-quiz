@@ -44,6 +44,13 @@ and ported 1:1 here.
 - `/admin` shows names and emails. It requires `ADMIN_PASSWORD` (unset = admin disabled); every admin page calls `requireAdmin()` and every admin API checks `isAdminRequest()`. Pages are `noindex`.
 - **One assessment per email.** A second assessment with a used email gets "That email is already associated with a previous assessment." (409). Enforced in the PATCH route and by the unique index on `lower(email)`. The repeat email gets its **original** report re-sent to that inbox, **once per email ever** (`report_resent_at`, claimed atomically; released if the send fails). The original result is never shown in the browser.
 
+## Security notes
+- Security headers (CSP, HSTS, nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy) are set in `next.config.mjs`. Everything is self-hosted; adding any third-party script, font or API means updating the CSP.
+- `clientIp()` uses the **rightmost** `X-Forwarded-For` entry (the one Coolify's Caddy appends). Revisit if another proxy/CDN is put in front.
+- Admin login: 5 attempts per IP per 5 min, plus a site-wide pause after 30 failures in 15 min. Failed and successful sign-ins are logged as `[admin] …` in the container logs.
+- Rate limits are in-memory (single container); move to Redis/Upstash before running more than one replica.
+- `postcss` is pinned via `overrides` in `package.json` (build-time only; clears an audit warning from Next's bundled copy).
+
 ## Commands
 ```bash
 npm install
