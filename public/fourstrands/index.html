@@ -391,6 +391,22 @@ button:disabled { cursor: not-allowed; }
 .teaser b { font-size: 14.5px; line-height: 1.35; }
 .remind .btn { flex: none; }
 .shareimg { width: 100%; max-height: 52vh; object-fit: contain; border-radius: 14px; background: #0B1424; }
+.tour { position: fixed; inset: 0; z-index: 25; }
+.tourhole { position: fixed; border-radius: 14px; box-shadow: 0 0 0 3px var(--amber), 0 0 0 9999px rgba(6, 11, 20, .74); transition: all .3s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.tourtip { position: fixed; left: 50%; transform: translateX(-50%); width: min(400px, calc(100% - 32px)); background: var(--text); color: var(--ink); border-radius: 16px; padding: 14px 16px 12px; box-shadow: 0 14px 40px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 6px; transition: top .3s cubic-bezier(.2,.8,.2,1); }
+.tourtip .tk { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A5A00; }
+.tourtip h3 { margin: 0; font-family: var(--display); font-size: 19px; line-height: 1.15; letter-spacing: -0.01em; }
+.tourtip p { margin: 0; font-size: 14px; line-height: 1.42; color: #2B3A50; }
+.tourtip .tsw { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; font-weight: 700; }
+.tourtip .tsw i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 4px; vertical-align: -1px; }
+.tourtip .trow { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.tourtip .tdots { display: flex; gap: 4px; flex: 1; }
+.tourtip .tdots i { width: 6px; height: 6px; border-radius: 50%; background: #C4CCD8; }
+.tourtip .tdots i.on { background: #0F1B2D; width: 16px; border-radius: 3px; }
+.tourtip .tskip { min-height: 44px; border: 0; background: none; color: #4A5A70; font: inherit; font-weight: 600; font-size: 13.5px; text-decoration: underline; text-underline-offset: 3px; padding: 0 6px; }
+.tourtip .tnext { min-height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--ink); color: var(--text); font: inherit; font-weight: 700; font-size: 14.5px; }
+.tourtip button:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tourhole, .tourtip { transition: none; } }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 40; width: min(440px, calc(100% - 32px)); border-radius: 14px; background: var(--text); color: var(--ink); padding: 11px 14px; font-size: 13.5px; line-height: 1.35; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: rise .3s ease-out; }
 .toast b { display: block; font-family: var(--display); font-size: 16px; }
 .bigav { width: 84px; height: 84px; border-radius: 50%; border: 3px solid var(--c); object-fit: cover; }
@@ -1102,6 +1118,58 @@ button:disabled { cursor: not-allowed; }
     </div>`;
   }
 
+  // ---------- board tour ----------
+  // First-time players get a short guided look at the board before their first roll. Each stop lights up one part.
+  function tourSteps() {
+    const g = s(), t = T[g.p.type];
+    const sw = F.STRAND_ORDER.map((k) => `<span style="--c:${SK[k].color}"><i></i>${SK[k].name}</span>`).join('');
+    return [
+      { sel: '.sp.here', title: 'This is you', text: `Your pawn starts on the first space. Each roll moves you round the board, one week of your life at a time.` },
+      { sel: '.board', title: 'Your life board', text: `Twenty spaces: payday, bills, temptations, chances and storms. The colour of a space tells you which strand it builds.`, extra: `<div class="tsw">${sw}</div>` },
+      { sel: '.center .cwho', title: 'Your life, right now', text: `${esc(g.p.name)}, age ${Math.floor(F.age(g))}. You play until 100, or until you go broke. Those are the only two endings.` },
+      { sel: '.center .pips', title: '3 weeks a day', text: `${F.turnsLeft(g) > 3 ? 'Your first day comes with ' + F.turnsLeft(g) + ' turns. After that, you' : 'You'} get 3 turns a day. Come back tomorrow for more. Missed days bring setbacks.` },
+      { sel: '.center .cnw, .center .clines, .center .cwarn', title: 'Your money summary', text: `Net worth, cash, emergency fund, what’s left each month and your bad debt. Watch these move as you choose.` },
+      { sel: '.center .cstr', title: 'Your four strands', text: `Grow, Joy, Protect and System. Each one levels up as you build it. Tap here any time for the details.` },
+      { sel: '.center .cgoal', title: 'Your next goal', text: `The next thing to aim for, including your dream. As ${/^[AEIOU]/.test(t.short) ? 'an' : 'a'} ${esc(t.short)}, watch for your shadow, \u201C${esc(t.shadow.toLowerCase())}\u201D.` },
+      { sel: '.top .row', title: 'Streak and coins', text: `Play every day to grow your streak and earn coins. Spend coins on an extra card or an extra week.` },
+      { sel: '.center .cnav', title: 'Your money tools', text: `Money, pockets, strands and coins. Move cash between your seven pockets here.` },
+      { sel: '#dieGrab', title: 'Roll to start your first week', text: `Swipe the die with your finger to roll it. Ready?`, last: true },
+    ].filter((st) => document.querySelector(st.sel));
+  }
+  function rectOf(sel) { // one box around every element the stop lights up
+    const rs = [...document.querySelectorAll(sel)].map((e) => e.getBoundingClientRect());
+    const l = Math.min(...rs.map((r) => r.left)), t = Math.min(...rs.map((r) => r.top)), rr = Math.max(...rs.map((r) => r.right)), b = Math.max(...rs.map((r) => r.bottom));
+    return { left: l, top: t, right: rr, bottom: b, width: rr - l, height: b - t };
+  }
+  function wantsTour() {
+    const g = s();
+    return app.screen === 'home' && g && !g.over && !app.toured && !(g.stats && g.stats.turns > 0) && !g.card && !app.ui.anim && !app.ui.sheet && F.turnsLeft(g) > 0 && !previewMode;
+  }
+  function tourLayer() {
+    if (app.ui.tour == null || app.screen !== 'home') return '';
+    return `<div class="tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourT"><div class="tourhole" id="tourHole"></div><div class="tourtip" id="tourTip"></div></div>`;
+  }
+  // fills in the current stop after the board is drawn, since it needs the real positions on screen
+  function placeTour() {
+    const el = document.getElementById('tour'); if (!el) return;
+    const steps = tourSteps(), i = Math.min(app.ui.tour, steps.length - 1), st = steps[i];
+    if (!st || !document.querySelector(st.sel)) return;
+    const r = rectOf(st.sel), pad = 6, vh = window.innerHeight;
+    const hole = document.getElementById('tourHole');
+    Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
+    const tip = document.getElementById('tourTip');
+    tip.innerHTML = `<span class="tk">Board tour · ${i + 1} of ${steps.length}</span><h3 id="tourT">${st.title}</h3><p>${st.text}</p>${st.extra || ''}
+      <div class="trow"><div class="tdots" aria-hidden="true">${steps.map((_, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>
+      ${st.last ? '' : `<button class="tskip" data-act="tourEnd">Skip</button>`}
+      ${i > 0 ? `<button class="tskip" data-act="tourBack">Back</button>` : ''}
+      <button class="tnext" data-act="${st.last ? 'tourEnd' : 'tourNext'}">${st.last ? 'Let’s roll' : 'Next'}</button></div>`;
+    // the tip goes below the lit part if it fits, otherwise above it
+    const th = tip.offsetHeight, below = r.bottom + pad + 12, above = r.top - pad - 12 - th;
+    tip.style.top = (below + th < vh - 8 ? below : above > 8 ? above : Math.max(8, vh - th - 8)) + 'px';
+    const nb = tip.querySelector('.tnext'); if (nb && document.activeElement !== nb) nb.focus({ preventScroll: true });
+  }
+  window.addEventListener('resize', () => placeTour());
+
   // ---------- turn ----------
   // the week's card rises over the board
   function vTurn() {
@@ -1594,6 +1662,7 @@ button:disabled { cursor: not-allowed; }
     const u = app.ui;
     return `${TEST ? `<div class="panel"><span class="kicker">Test clock</span><p class="fine">Pretend days pass, to try streaks and missed days. Today is ${esc(today())}.</p>
         <div class="grid2"><button class="btn small" data-act="clock" data-arg="1">Next day</button><button class="btn small" data-act="clock" data-arg="3">Skip 2 days</button><button class="btn small" data-act="clock" data-arg="9">Skip 8 days</button><button class="btn small" data-act="clock" data-arg="16">Skip 15 days</button></div></div>` : ''}
+      <button class="btn small wide" data-act="tourAgain">Take the board tour again</button>
       <button class="btn small wide" data-act="previewStreak">Preview the streak celebration</button>
       <div class="vol"><label for="vMusic">Music</label><input id="vMusic" type="range" min="0" max="100" step="5" value="${vol('musicVol')}" data-vol="musicVol"><output>${vol('musicVol') ? vol('musicVol') + '%' : 'Off'}</output></div>
       <div class="vol"><label for="vSfx">Sound effects</label><input id="vSfx" type="range" min="0" max="100" step="5" value="${vol('sfxVol')}" data-vol="sfxVol"><output>${vol('sfxVol') ? vol('sfxVol') + '%' : 'Off'}</output></div>
@@ -1601,7 +1670,7 @@ button:disabled { cursor: not-allowed; }
       ${u.confirm ? `<div class="panel"><b>Start a new life? This one ends for good.</b><div class="grid2"><button class="btn small" data-act="noConfirm">Keep playing</button><button class="btn small" style="border-color:var(--bad);color:var(--bad)" data-act="restartNow">Start over</button></div></div>`
         : `<button class="btn wide" data-act="askRestart">Start a new life</button>`}
       ${acct.user ? `<div class="lines"><div><span>Signed in</span><b>${esc(acct.user.email)}</b></div></div><button class="btn small wide" data-act="signOut">Sign out</button>`
-        : CLOUD ? `<button class="btn small wide" data-act="toSignIn">Sign in with Google to save your game</button>` : ''}
+        : CLOUD && (acct.clientId || acct.devLogin) ? `<button class="btn small wide" data-act="toSignIn">Sign in with Google to save your game</button>` : ''}
       <p class="fine">A game, not financial advice. ${acct.user ? 'Saved to your Google account.' : 'Saved on this phone only.'}</p>`;
   }
 
@@ -1621,7 +1690,8 @@ button:disabled { cursor: not-allowed; }
     const key = app.ui.sheet ? app.ui.sheet + (app.ui.tab || '') : null;
     app.ui.animate = key && key !== lastSheet && !(lastSheet && app.ui.sheet && lastSheet.indexOf(app.ui.sheet) === 0);
     lastSheet = key;
-    root.innerHTML = (views[app.screen] || vWelcome)() + sheet() + (app.ui.toast ? `<div class="toast" role="status">${app.ui.toast}</div>` : '');
+    if (app.ui.tour == null && wantsTour()) app.ui.tour = 0;
+    root.innerHTML = (views[app.screen] || vWelcome)() + tourLayer() + sheet() + (app.ui.toast ? `<div class="toast" role="status">${app.ui.toast}</div>` : '');
     bindDie();
     app.ui.cardAnim = false; // the card rises once, not on every redraw
     if (app.screen === 'streak' && app.ui.celebrate) { app.ui.celebrate = false; celebrate(); }
@@ -1636,6 +1706,7 @@ button:disabled { cursor: not-allowed; }
     const rf = document.getElementById('reportFile');
     if (rf) rf.addEventListener('change', () => readReport(rf.files && rf.files[0]));
     mountGoogle();
+    placeTour();
     const dn = document.getElementById('dn');
     if (dn) dn.addEventListener('input', () => { app.intake.a.dreamName = dn.value; save(); });
     save();
@@ -1655,7 +1726,7 @@ button:disabled { cursor: not-allowed; }
   }
   // The feed arrives after first paint; show it as soon as the player is back on the home screen.
   function maybeNews() {
-    const g = s(); if (!g || g.over || !feed || app.screen !== 'home' || g.card) return;
+    const g = s(); if (!g || g.over || !feed || app.screen !== 'home' || g.card || app.ui.tour != null) return; // the tour finishes first
     const news = F.applyNews(g, feed, today());
     if (news) { app.awayPages = news.map((n) => ({ type: 'news', n })); app.ui = { awayIdx: 0 }; app.screen = 'away'; render(); }
   }
@@ -1691,6 +1762,10 @@ button:disabled { cursor: not-allowed; }
     go(arg) { app.screen = arg; app.ui = {}; if (arg === 'home') openToday(); },
     restart() { app.ui = { sheet: 'menu', confirm: true }; if (!s() || s().over) { const c = app.clock; app = fresh(); app.clock = c; app.screen = 'consent'; } else { app.screen = 'home'; } },
     askRestart() { app.ui.confirm = true; },
+    tourNext() { app.ui.tour++; },
+    tourBack() { app.ui.tour = Math.max(0, app.ui.tour - 1); },
+    tourEnd() { app.ui.tour = null; app.toured = true; },
+    tourAgain() { app.ui = { tour: 0 }; app.screen = 'home'; },
     guest() { app.guest = true; app.ui = {}; if (s() && !s().over) { app.screen = 'home'; openToday(); } else app.screen = 'consent'; },
     toSignIn() { app.guest = false; app.ui = {}; app.screen = 'welcome'; },
     devLogin() { signIn('auth/dev'); },
@@ -1919,6 +1994,7 @@ button:disabled { cursor: not-allowed; }
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && app.ui.sheet) { app.ui.sheet = null; render(); }
+    else if (e.key === 'Escape' && app.ui.tour != null) { app.ui.tour = null; app.toured = true; render(); }
     if (e.key === 'Enter' && app.screen === 'intake') { const b = root.querySelector('[data-act="intakeNext"]'); if (b && !b.disabled) b.click(); }
   });
 
