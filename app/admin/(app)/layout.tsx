@@ -13,8 +13,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Money DNA Admin
         </div>
         <nav className="adm-nav">
-          <Link href="/admin">Dashboard</Link>
+          <Link href="/admin">Quiz dashboard</Link>
           <Link href="/admin/submissions">Submissions</Link>
+          <Link href="/admin/fourstrands">Four Strands</Link>
           <form action="/api/admin/logout" method="post"><button type="submit">Sign out</button></form>
         </nav>
       </header>

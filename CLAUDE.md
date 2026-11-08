@@ -36,6 +36,8 @@ and ported 1:1 here.
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
 | `public/fourstrands/` | The Four Strands game at `/fourstrands`. **Generated** by `Board game/companion/build-web.mjs`; edit the game there, not here |
 | `lib/fourstrands-auth.ts` + `app/api/fourstrands/{auth/google,auth/logout,me,save}` | Game accounts: "Continue with Google" only (no passwords). Verifies the Google ID token against Google's keys, then a signed HttpOnly `fs_session` cookie (60 days). Saves live in `fourstrands_players` (one row per Google account), with a version check so two phones can't overwrite each other (409 → the client switches to the newer save) |
+| `app/admin/(app)/fourstrands` + `lib/fourstrands-admin.ts` | Admin "Four Strands" dashboard: accounts, sign-ups, guests, daily/weekly/monthly players, stickiness, turns, next-day and 7-day return, streaks, types, ages, game status, coin purchases, recent players |
+| `app/api/fourstrands/ping` | The game's usage ping (on open and as turns are played): one `fourstrands_activity` row per player or guest phone per Manila day, via the `fourstrands_touch()` function. Guests are a random phone id; no personal data |
 | `app/api/fourstrands/auth/dev` | Local test login without Google: only with `FOURSTRANDS_DEV_LOGIN=1` on localhost; 404 everywhere else |
 
 ## Data & privacy rules (do not break)

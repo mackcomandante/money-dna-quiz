@@ -61,3 +61,5 @@
 .adm-empty { padding: 28px; text-align: center; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 16px; }
 .adm-table a.adm-dl-link { color: var(--amber); font-weight: 700; white-space: nowrap; }
 .adm-table a.adm-dl-link:hover { color: #FFD27A; }
+.adm-daily .adm-col { display: flex; flex-direction: column; border-radius: 3px 3px 0 0; overflow: hidden; }
+.adm-daily .adm-col i { display: block; min-height: 0; }
