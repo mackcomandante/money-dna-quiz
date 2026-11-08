@@ -1545,10 +1545,18 @@ button:disabled { cursor: not-allowed; }
   let feed = app.feedCache || null;
   async function loadNews() {
     try {
-      if (!window.claude || !window.claude.use) return;
-      const db = await window.claude.use('db'); if (!db) return;
-      const snap = await db.doc('news/latest').get();
-      if (snap.exists) { feed = snap.data(); app.feedCache = feed; maybeNews(); save(); }
+      if (window.claude && window.claude.use) {
+        const db = await window.claude.use('db'); if (!db) return;
+        const snap = await db.doc('news/latest').get();
+        if (snap.exists) { feed = snap.data(); app.feedCache = feed; maybeNews(); save(); }
+        return;
+      }
+      // On moneydna.exoasia.org the site's own news service writes today's feed.
+      if (!/^https?:$/.test(location.protocol)) return;
+      const res = await fetch('/api/fourstrands/news', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.date && Array.isArray(data.items) && data.items.length) { feed = data; app.feedCache = feed; maybeNews(); save(); }
     } catch (e) { /* no feed today: the game plays on without news */ }
   }
 
