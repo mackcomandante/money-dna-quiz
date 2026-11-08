@@ -1570,7 +1570,7 @@
   };
   function newsReaction(s, it, e) {
     const t = s.p.type, fb = NEWS_REACT[t], r = it.reactions && it.reactions[t];
-    const ok = (x) => typeof x === 'string' && x.trim().length >= 3 && x.length <= 80;
+    const ok = (x) => typeof x === 'string' && x.trim().length >= 3 && x.length <= 90;
     const m = monthly(s), inc = Math.max(m.income + m.passive, 10000 * s.px);
     const stake = r100(Math.min(0.15 * inc, Math.max(Math.abs(e.amt), 0.02 * inc)));
     return { type: t, strength: r && ok(r.strength) ? r.strength.trim() : fb.strength, shadow: r && ok(r.shadow) ? r.shadow.trim() : fb.shadow, stake, flip: rand(s) < 0.5, picked: null };

@@ -84,7 +84,7 @@ function validImpacts(list: unknown): Impact[] {
 function validReactions(r: unknown): Record<string, Reaction> | undefined {
   if (!r || typeof r !== 'object') return undefined;
   const out: Record<string, Reaction> = {};
-  const ok = (x: unknown) => typeof x === 'string' && x.trim().length >= 3 && x.trim().length <= 70;
+  const ok = (x: unknown) => typeof x === 'string' && x.trim().length >= 3 && x.trim().length <= 90;
   for (const t of ['D', 'I', 'S', 'C']) {
     const x = (r as Record<string, { strength?: unknown; shadow?: unknown }>)[t];
     if (x && ok(x.strength) && ok(x.shadow)) out[t] = { strength: String(x.strength).trim(), shadow: String(x.shadow).trim() };
@@ -110,7 +110,7 @@ For each, write:
   - story: one sentence, second person, sentence case, at most 25 words, how this touches that kind of person's money
   - include exactly one impact with who "all" as the fallback
 - "reactions": how each Money DNA money personality might respond to this news, as {"D":{"strength","shadow"},"I":{...},"S":{...},"C":{...}}.
-  Each is a short action the player can choose, imperative, sentence case, at most 55 characters, specific to this headline.
+  Each is a short action the player can choose, imperative, sentence case, at most 50 characters (count them), specific to this headline. No period at the end.
   "strength" is the type's healthy response; "shadow" is its typical trap, tempting and plausible, never silly. Don't name the type or say which is which.
   - D Empire Builder: strength = bold, leverages opportunity, builds assets; shadow "All-in" = bets everything on one move, borrows too much
   - I Trailblazer: strength = uses their network, enjoys life within a plan; shadow "Spend first" = money leaks out as fast as it comes in, follows the crowd
