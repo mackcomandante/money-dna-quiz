@@ -92,11 +92,22 @@ function validReactions(r: unknown): Record<string, Reaction> | undefined {
   return Object.keys(out).length ? out : undefined;
 }
 
+// Two outlets covering one event: they share at least 2 meaningful words (e.g. "trade" and "deficit").
+const STOP = new Set('the a an and or of to in on for by with as at from is are was were be its it this that than into over after amid more less new says said year month week percent ph philippine philippines pinoys filipino filipinos'.split(' '));
+function words(s: string): Set<string> {
+  return new Set(s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w) && !/^\d+$/.test(w)));
+}
+function sameStory(a: string, b: string): boolean {
+  const A = words(a); let n = 0;
+  for (const w of words(b)) if (A.has(w)) n++;
+  return n >= 2;
+}
+
 // ---------- Gemini (free tier) ----------
 function prompt(items: RssItem[]): string {
   const list = items.map((x, i) => `${i}. [${x.source}] ${x.title}${x.desc ? ' — ' + x.desc : ''}`).join('\n');
   return `You choose today's news for "Four Strands", a money-habits game for ordinary Filipino households.
-From the numbered headlines below (Philippine business news from the last 48 hours), pick the 3 that matter most to household money: inflation, the peso, BSP interest rates, fuel and rice prices, wages and jobs, remittances, stocks, typhoons and calamities, taxes and fees. Skip company PR, awards, lifestyle and gadget stories.
+From the numbered headlines below (Philippine business news from the last 48 hours), pick the 4 that matter most to household money, best first. Each must be a different event: several outlets often cover the same story (e.g. one report on the farm trade deficit), so pick only one headline per story. Topics: inflation, the peso, BSP interest rates, fuel and rice prices, wages and jobs, remittances, stocks, typhoons and calamities, taxes and fees. Skip company PR, awards, lifestyle and gadget stories.
 
 For each, write:
 - "index": the headline's number
@@ -132,7 +143,7 @@ async function viaGemini(items: RssItem[]): Promise<NewsItem[] | null> {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt(items) }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 4096 } }),
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt(items) }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 8192 } }),
         signal: AbortSignal.timeout(30_000),
       });
       if (res.status === 404 || res.status === 400) continue; // model not available to this key: try the next one
@@ -144,7 +155,7 @@ async function viaGemini(items: RssItem[]): Promise<NewsItem[] | null> {
       for (const it of Array.isArray(parsed?.items) ? parsed.items : []) {
         const src = items[Number(it?.index)];
         const impacts = validImpacts(it?.impacts);
-        if (!src || !impacts.length || out.some((o) => o.url === src.link)) continue;
+        if (!src || !impacts.length || out.some((o) => o.url === src.link || sameStory(o.headline, String(it.headline || src.title)) || sameStory(o.headline, src.title))) continue;
         out.push({ headline: String(it.headline || src.title).slice(0, 110), source: src.source, url: src.link, summary: String(it.summary || '').slice(0, 240), impacts, reactions: validReactions(it?.reactions) });
         if (out.length === 3) break;
       }
