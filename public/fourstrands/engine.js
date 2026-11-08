@@ -1553,11 +1553,46 @@
         } else if (r.amt > 0) { s.cash += r.amt; e.amt = r.amt; }
         else if (r.amt < 0) { const o = pay(s, -r.amt, { capped: true, label: 'the news' }); e.amt = -(Math.round(-r.amt - o.short)); }
       }
+      e.react = newsReaction(s, it, e);
       out.push(e);
     });
     updateLevels(s);
     s.lastNews = { date: feed.date, items: out };
     return out;
+  }
+  // How each Money DNA type might react to a headline: a strength play and the shadow's pull.
+  // The daily feed carries headline-specific wording per type; these are the fallback.
+  const NEWS_REACT = {
+    D: { strength: 'Look for the opportunity in this', shadow: 'Make one big bet on it, fast' },
+    I: { strength: 'Talk it over, then make one smart move', shadow: 'Spend first, worry about it later' },
+    S: { strength: 'Stay steady and protect your safety fund', shadow: 'Cover everyone else’s share of the hit' },
+    C: { strength: 'Check your numbers and adjust your plan', shadow: 'Keep researching and do nothing' },
+  };
+  function newsReaction(s, it, e) {
+    const t = s.p.type, fb = NEWS_REACT[t], r = it.reactions && it.reactions[t];
+    const ok = (x) => typeof x === 'string' && x.trim().length >= 3 && x.length <= 80;
+    const m = monthly(s), inc = Math.max(m.income + m.passive, 10000 * s.px);
+    const stake = r100(Math.min(0.15 * inc, Math.max(Math.abs(e.amt), 0.02 * inc)));
+    return { type: t, strength: r && ok(r.strength) ? r.strength.trim() : fb.strength, shadow: r && ok(r.shadow) ? r.shadow.trim() : fb.shadow, stake, flip: rand(s) < 0.5, picked: null };
+  }
+  // The player picks a reaction on a news card. Strength play: a small gain. Shadow: it costs you, and your shadow grows.
+  // Like the news itself, it never makes you go broke.
+  function reactNews(s, idx, tag) {
+    const e = s.lastNews && s.lastNews.items[idx], rc = e && e.react;
+    if (!rc || rc.picked || s.over || (tag !== 'strength' && tag !== 'shadow')) return null;
+    rc.picked = tag;
+    let res;
+    if (tag === 'strength') {
+      const x = r100(rc.stake * 0.5); s.cash += x;
+      res = { tone: 'good', amt: x, msg: 'Your ' + TYPES[rc.type].short + ' strength paid off: +' + short(x) + '.' };
+    } else {
+      shadowUp(s);
+      const o = pay(s, rc.stake, { capped: true, label: 'the news' }), lost = Math.round(rc.stake - o.short);
+      res = { tone: 'bad', amt: -lost, msg: 'Your shadow, ' + TYPES[rc.type].shadow + ', took over. It cost you ' + short(lost) + '.' };
+    }
+    rc.result = res;
+    updateLevels(s);
+    return res;
   }
 
   // ---------- life story ----------
@@ -1582,7 +1617,7 @@
     progress, totalLevel, dreamCost, fulfilDream, lifeStory,
     canCut, cutCosts, setPocket, payDebt, toSafety, fromSafety, toDream, investCash, sellAsset, sellQuote, buyInsurance, insuranceQuote, dropInsurance, makeWill, willFee, hireManager, useMove,
     // for the simulator
-    graceUntil, inGrace, BOARD, SPACES, applyNews, segments, WHO_LABEL,
+    graceUntil, inGrace, BOARD, SPACES, applyNews, reactNews, segments, WHO_LABEL,
     _advance: advance, _drawCard: drawCard, _runAbsence: runAbsence,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FS = api;

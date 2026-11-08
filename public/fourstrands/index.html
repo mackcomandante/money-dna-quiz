@@ -411,6 +411,9 @@ button:disabled { cursor: not-allowed; }
 .toast b { display: block; font-family: var(--display); font-size: 16px; }
 .bigav { width: 84px; height: 84px; border-radius: 50%; border: 3px solid var(--c); object-fit: cover; }
 .centered { align-items: center; text-align: center; justify-content: center; }
+.react { display: flex; flex-direction: column; gap: 8px; }
+.react .btn { min-height: 46px; text-align: left; justify-content: flex-start; }
+.react-res { font-size: 14px; font-weight: 600; }
 .storyl { display: flex; flex-direction: column; gap: 6px; }
 .storyl div { font-size: 14px; color: var(--soft); display: flex; gap: 8px; }
 .storyl div::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); margin-top: 7px; flex: none; }
@@ -1234,6 +1237,11 @@ button:disabled { cursor: not-allowed; }
   }
 
   // ---------- while you were away: today's real headlines, then any missed days ----------
+  // The live reaction for a news page (the save holds whether it was picked).
+  function newsReact(pg) {
+    const g = s(), L = g && g.lastNews;
+    return pg.k != null && L && L.items[pg.k] && L.items[pg.k].react || null;
+  }
   function vAway() {
     const pages = app.awayPages || [];
     const i = Math.min(app.ui.awayIdx || 0, pages.length - 1), pg = pages[i];
@@ -1242,7 +1250,7 @@ button:disabled { cursor: not-allowed; }
     const head = `<div class="between"><span class="kicker">While you were away</span>${pages.length > 1 ? `<span class="chip num">${i + 1} of ${pages.length}</span>` : ''}</div>`;
     const nav = `<div class="grid2">${i > 0 ? `<button class="btn" data-act="awayPrev">Back</button>` : '<span></span>'}${last ? `<button class="btn primary" data-act="awayDone">Back to my life</button>` : `<button class="btn primary" data-act="awayNext">Next</button>`}</div>`;
     if (pg.type === 'news') {
-      const n = pg.n, up = n.amt > 0, down = n.amt < 0;
+      const n = pg.n, up = n.amt > 0, down = n.amt < 0, rc = newsReact(pg);
       const money = !n.amt ? 'No change for you' : (up ? '+' : '−') + S(Math.abs(n.amt)) + (n.valueOnly ? ' in asset value' : up ? ' to your cash' : ' from your money');
       return `<div class="screen">${head}
         <span class="fine">In the news${n.source ? ' · Source: ' + esc(n.source) : ''}</span>
@@ -1254,8 +1262,14 @@ button:disabled { cursor: not-allowed; }
           <b style="font-family:var(--display);font-size:24px;color:${up ? 'var(--good)' : down ? 'var(--bad)' : 'var(--muted)'}">${money}</b>
         </div>
         <div class="grow"></div>
+        ${rc && !rc.picked ? `<div class="react">
+          <span class="kicker" style="--k:${T[rc.type].color}">How do you react? · ${esc(T[rc.type].short)}</span>
+          ${(rc.flip ? ['shadow', 'strength'] : ['strength', 'shadow']).map((tag) => `<button class="btn wide" data-act="react" data-arg="${tag}">${esc(rc[tag])}</button>`).join('')}
+        </div>
+        <div class="grid2">${i > 0 ? `<button class="btn" data-act="awayPrev">Back</button>` : '<span></span>'}<span></span></div>`
+        : `${rc && rc.result ? `<p class="lead react-res" style="color:var(--${rc.result.tone === 'good' ? 'good' : 'bad'})">${esc(rc.result.msg)}</p>` : ''}
         <p class="fine">Real headlines, simplified effects in your game. Not financial advice.</p>
-        ${nav}
+        ${nav}`}
       </div>`;
     }
     const r = pg.rep, ch = r.endNW - r.startNW;
@@ -1720,7 +1734,7 @@ button:disabled { cursor: not-allowed; }
     const rep = F.openDay(g, today());
     const pages = [];
     const news = g.over ? null : F.applyNews(g, feed, today());
-    if (news) news.forEach((n) => pages.push({ type: 'news', n }));
+    if (news) news.forEach((n, k) => pages.push({ type: 'news', n, k }));
     if (rep && rep.days > 0) pages.push({ type: 'absence', rep });
     if (pages.length) { app.awayPages = pages; app.ui = { awayIdx: 0 }; app.screen = 'away'; }
   }
@@ -1728,7 +1742,7 @@ button:disabled { cursor: not-allowed; }
   function maybeNews() {
     const g = s(); if (!g || g.over || !feed || app.screen !== 'home' || g.card || app.ui.tour != null) return; // the tour finishes first
     const news = F.applyNews(g, feed, today());
-    if (news) { app.awayPages = news.map((n) => ({ type: 'news', n })); app.ui = { awayIdx: 0 }; app.screen = 'away'; render(); }
+    if (news) { app.awayPages = news.map((n, k) => ({ type: 'news', n, k })); app.ui = { awayIdx: 0 }; app.screen = 'away'; render(); }
   }
   let feed = app.feedCache || null;
   async function loadNews() {
@@ -1876,6 +1890,13 @@ button:disabled { cursor: not-allowed; }
     dreamAdd(x) { F.toDream(s(), +x); },
     dreamDo() { const g = s(); const name = g.dream.name; if (F.fulfilDream(g)) { app.ui.sheet = null; g.news = []; toast(`<b>Dream come true</b>${esc(name)}`); } },
     clock(n) { if (!TEST) return; app.clock = (app.clock || 0) + (+n); app.ui = {}; app.screen = 'home'; openToday(); if (app.screen === 'home') toast(`<b>It’s ${esc(today())}</b>A new day: ${F.turnsLeft(s())} turns to play.`); },
+    react(tag) {
+      const g = s(), pg = (app.awayPages || [])[app.ui.awayIdx || 0]; if (!g || !pg || pg.k == null) return;
+      const r = F.reactNews(g, pg.k, tag); if (!r) return;
+      noteChoice(g, { title: 'News: ' + pg.n.headline }, { tag }, r.amt, []);
+      if (r.tone === 'good') SFX.good(); else SFX.bad();
+      save();
+    },
     awayNext() { app.ui.awayIdx = (app.ui.awayIdx || 0) + 1; },
     awayPrev() { app.ui.awayIdx = Math.max(0, (app.ui.awayIdx || 0) - 1); },
     awayDone() { app.awayPages = null; app.ui = {}; app.screen = s() && s().over ? 'over' : 'home'; maybeNews(); },

@@ -18,7 +18,8 @@ const EFFECTS = ['cash', 'living', 'rates', 'paper', 'property', 'business'] as 
 const SIZES = ['s', 'm', 'l'] as const;
 
 export interface Impact { who: string; effect: string; dir: 1 | -1; size: 's' | 'm' | 'l'; story: string }
-export interface NewsItem { headline: string; source: string; url: string; summary: string; impacts: Impact[] }
+export interface Reaction { strength: string; shadow: string }
+export interface NewsItem { headline: string; source: string; url: string; summary: string; impacts: Impact[]; reactions?: Record<string, Reaction> }
 export interface NewsFeed { date: string; engine: 'gemini' | 'rules' | 'none'; items: NewsItem[] }
 interface RssItem { title: string; link: string; source: string; time: number; desc: string }
 
@@ -79,6 +80,17 @@ function validImpacts(list: unknown): Impact[] {
   if (!out.some((i) => i.who === 'all')) return [];
   return out.slice(0, 5);
 }
+// One strength play and one shadow pull per Money DNA type. A missing or bad type falls back to the game's generic wording.
+function validReactions(r: unknown): Record<string, Reaction> | undefined {
+  if (!r || typeof r !== 'object') return undefined;
+  const out: Record<string, Reaction> = {};
+  const ok = (x: unknown) => typeof x === 'string' && x.trim().length >= 3 && x.trim().length <= 70;
+  for (const t of ['D', 'I', 'S', 'C']) {
+    const x = (r as Record<string, { strength?: unknown; shadow?: unknown }>)[t];
+    if (x && ok(x.strength) && ok(x.shadow)) out[t] = { strength: String(x.strength).trim(), shadow: String(x.shadow).trim() };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
 
 // ---------- Gemini (free tier) ----------
 function prompt(items: RssItem[]): string {
@@ -97,9 +109,16 @@ For each, write:
   - size: "s" normal, "m" clear, "l" only for major events
   - story: one sentence, second person, sentence case, at most 25 words, how this touches that kind of person's money
   - include exactly one impact with who "all" as the fallback
+- "reactions": how each Money DNA money personality might respond to this news, as {"D":{"strength","shadow"},"I":{...},"S":{...},"C":{...}}.
+  Each is a short action the player can choose, imperative, sentence case, at most 55 characters, specific to this headline.
+  "strength" is the type's healthy response; "shadow" is its typical trap, tempting and plausible, never silly. Don't name the type or say which is which.
+  - D Empire Builder: strength = bold, leverages opportunity, builds assets; shadow "All-in" = bets everything on one move, borrows too much
+  - I Trailblazer: strength = uses their network, enjoys life within a plan; shadow "Spend first" = money leaks out as fast as it comes in, follows the crowd
+  - S Guardian: strength = steady, protects the safety fund and family within limits; shadow "Rescuer" = carries everyone else's money problems
+  - C Architect: strength = checks the numbers, adjusts the plan and acts; shadow "Waiting" = analyzes until inflation wins, does nothing
 Be fair and balanced: include real upsides (a weak peso helps OFW families, higher rates help savers). No financial advice, no politics, no hype.
 
-Reply with JSON only: {"items":[{"index":0,"headline":"...","summary":"...","impacts":[...]}]}
+Reply with JSON only: {"items":[{"index":0,"headline":"...","summary":"...","impacts":[...],"reactions":{"D":{"strength":"...","shadow":"..."},"I":{...},"S":{...},"C":{...}}}]}
 
 Headlines:
 ${list}`;
@@ -113,7 +132,7 @@ async function viaGemini(items: RssItem[]): Promise<NewsItem[] | null> {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt(items) }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 2048 } }),
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt(items) }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 4096 } }),
         signal: AbortSignal.timeout(30_000),
       });
       if (res.status === 404 || res.status === 400) continue; // model not available to this key: try the next one
@@ -126,7 +145,7 @@ async function viaGemini(items: RssItem[]): Promise<NewsItem[] | null> {
         const src = items[Number(it?.index)];
         const impacts = validImpacts(it?.impacts);
         if (!src || !impacts.length || out.some((o) => o.url === src.link)) continue;
-        out.push({ headline: String(it.headline || src.title).slice(0, 110), source: src.source, url: src.link, summary: String(it.summary || '').slice(0, 240), impacts });
+        out.push({ headline: String(it.headline || src.title).slice(0, 110), source: src.source, url: src.link, summary: String(it.summary || '').slice(0, 240), impacts, reactions: validReactions(it?.reactions) });
         if (out.length === 3) break;
       }
       return out.length ? out : null;
