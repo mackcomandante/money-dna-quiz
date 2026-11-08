@@ -54,6 +54,8 @@ button:disabled { cursor: not-allowed; }
 .btn.small { min-height: 40px; padding: 0 12px; font-size: 13px; border-radius: 11px; }
 .btn.wide { width: 100%; }
 .btn svg { width: 18px; height: 18px; }
+.fine.mid { text-align: center; }
+.gbtn { display: flex; justify-content: center; min-height: 44px; color-scheme: normal; }
 .linkbtn { min-height: 44px; border: 0; background: none; color: var(--soft); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; padding: 0 4px; }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
 .iconbtn svg { width: 20px; height: 20px; }
@@ -640,11 +642,117 @@ button:disabled { cursor: not-allowed; }
   window.addEventListener('pagehide', () => MUSIC.stop());
 
   // ---------- state ----------
+  // On moneydna.exoasia.org/fourstrands players sign in with Google and the game is saved to their account,
+  // so it follows them to any phone. Elsewhere (local demos, claude.ai) it stays in this browser only.
+  const CLOUD = /^\/fourstrands(\/|$)/.test(location.pathname);
+  const API = '/api/fourstrands/';
+  const acct = { checked: !CLOUD, user: null, version: 0, clientId: null, devLogin: false, shift: 0 };
   let app = load() || fresh();
   function fresh() { return { screen: 'welcome', intake: { step: 0, a: {}, quiz: null }, s: null, clock: 0, mirror: 0, ui: {} }; }
-  function save() { try { const c = Object.assign({}, app, { ui: app.screen === 'away' ? { awayIdx: app.ui.awayIdx || 0 } : {} }); localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} }
+  function save() { try { const c = Object.assign({}, app, { ui: app.screen === 'away' ? { awayIdx: app.ui.awayIdx || 0 } : {} }); localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} pushSoon(); }
+
+  // ---------- account and cloud save ----------
+  // These stay on each phone: sound levels, the test clock, the cached news, and the guest choice.
+  const DEVICE = ['ui', 'clock', 'musicVol', 'sfxVol', 'music', 'sound', 'feedCache', 'guest', 'endPreview'];
+  let lastPushed = null, pushTimer = null, pushing = false, pushAgain = false, previewMode = false;
+  const deviceBits = () => { const d = {}; DEVICE.forEach((k) => { if (app[k] !== undefined) d[k] = app[k]; }); return d; };
+  function cloudJson() { const c = {}; Object.keys(app).forEach((k) => { if (DEVICE.indexOf(k) < 0) c[k] = app[k]; }); return JSON.stringify(c); }
+  function setShift(day) { // count days by the server's Manila date, not the phone's clock
+    if (!day) return; const d = new Date();
+    acct.shift = Math.round((Date.parse(day + 'T00:00:00Z') - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000) || 0;
+  }
+  function useCloudSave(save, version) {
+    app = Object.assign({}, save, deviceBits(), { ui: {}, guest: false });
+    acct.version = version || 0; lastPushed = cloudJson(); tidy();
+  }
+  function adoptAccount(d) {
+    acct.user = d.user || null; acct.version = d.version || 0; setShift(d.today);
+    if (!acct.user) return;
+    if (d.save && d.save.screen) useCloudSave(d.save, d.version);
+    else { app.guest = false; lastPushed = null; } // nothing saved yet: the game on this phone becomes the account's game
+  }
+  async function api(path, opts) {
+    const r = await fetch(API + path, Object.assign({ credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } }, opts || {}));
+    let body = null; try { body = await r.json(); } catch (e) {}
+    return { status: r.status, ok: r.ok, body: body || {} };
+  }
+  async function checkAccount() {
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+      const r = await api('me', { signal: ctl.signal }); clearTimeout(t);
+      if (r.ok) { acct.clientId = r.body.clientId; acct.devLogin = !!r.body.devLogin; adoptAccount(r.body); }
+    } catch (e) {} // offline: play from this phone's copy and save when back
+    acct.checked = true;
+  }
+  async function signIn(path, body) {
+    acct.busy = true; render();
+    try {
+      const r = await api(path, { method: 'POST', body: JSON.stringify(body || {}) });
+      if (!r.ok) throw new Error(r.body.error || 'Sign-in failed');
+      const had = !!(s() && !s().over);
+      adoptAccount(r.body);
+      if (!r.body.save) pushSoon(0);
+      app.ui = {};
+      if (s() && !s().over) { app.screen = 'home'; openToday(); }
+      else if (s() && s().over) app.screen = 'over';
+      else app.screen = 'consent';
+      toast(`<b>Signed in as ${esc(acct.user.name || acct.user.email)}</b>${r.body.save ? (had ? 'Loaded the game saved to your account.' : 'Welcome back.') : 'Your game now saves to your Google account.'}`);
+    } catch (e) {
+      toast(`<b>Couldn’t sign you in</b>${esc(e.message || 'Try again.')}`);
+    }
+    acct.busy = false; render();
+  }
+  function pushSoon(ms) {
+    if (!acct.user || previewMode) return;
+    clearTimeout(pushTimer); pushTimer = setTimeout(push, ms == null ? 1500 : ms);
+  }
+  async function push() {
+    if (!acct.user || previewMode) return;
+    const body = cloudJson(); if (body === lastPushed) return;
+    if (pushing) { pushAgain = true; return; }
+    pushing = true;
+    try {
+      const r = await api('save', { method: 'PUT', body: `{"baseVersion":${acct.version},"save":${body}}` });
+      if (r.ok) { acct.version = r.body.version; lastPushed = body; }
+      else if (r.status === 409 && r.body.save) { // another phone played since: switch to that game
+        useCloudSave(r.body.save, r.body.version);
+        if (app.screen === 'home') openToday();
+        toast('<b>Picked up where you left off</b>You played on another device, so this one now shows that game.');
+        render();
+      } else if (r.status === 401) { acct.user = null; toast('<b>You were signed out</b>Sign in again to keep saving to your account.'); app.screen = 'welcome'; app.ui = {}; render(); }
+      else setTimeout(() => pushSoon(0), 20000);
+    } catch (e) { setTimeout(() => pushSoon(0), 20000); }
+    pushing = false;
+    if (pushAgain) { pushAgain = false; pushSoon(0); }
+  }
+  // Leaving the page: send anything not yet saved.
+  window.addEventListener('pagehide', () => {
+    if (!acct.user || previewMode) return; const body = cloudJson(); if (body === lastPushed || body.length > 60000) return;
+    try { fetch(API + 'save', { method: 'PUT', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: `{"baseVersion":${acct.version},"save":${body}}` }); } catch (e) {}
+  });
+  // Coming back to the game: pick up anything played on another device meanwhile.
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || !acct.user || previewMode || app.ui.anim || cloudJson() !== lastPushed) return;
+    try { const r = await api('me'); if (r.ok && r.body.user && r.body.version > acct.version && r.body.save) { setShift(r.body.today); useCloudSave(r.body.save, r.body.version); if (app.screen === 'home') openToday(); render(); } } catch (e) {}
+  });
+  // Google's "Continue with Google" button
+  let gis = null;
+  function loadGis() {
+    if (!gis) gis = loadScript('https://accounts.google.com/gsi/client').then(() => {
+      window.google.accounts.id.initialize({ client_id: acct.clientId, callback: (r) => signIn('auth/google', { credential: r.credential }), ux_mode: 'popup', itp_support: true });
+    });
+    return gis;
+  }
+  function mountGoogle() {
+    if (!document.getElementById('gbtn') || !acct.clientId) return;
+    loadGis().then(() => {
+      const el = document.getElementById('gbtn');
+      if (el && !el.childElementCount) window.google.accounts.id.renderButton(el, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center', width: Math.min(400, Math.max(240, el.clientWidth || 320)) });
+    }).catch(() => { gis = null; acct.gisError = true; render(); });
+  }
+  const signedOutCloud = () => CLOUD && acct.checked && !acct.user && !!(acct.clientId || acct.devLogin); // no Google set up yet: play as before
   function load() { try { const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if (x && x.screen) { x.ui = x.screen === 'away' ? (x.ui || {}) : {}; return x; } } catch (e) {} return null; }
-  function today() { const d = new Date(); const ms = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) + (app.clock || 0) * 86400000; return new Date(ms).toISOString().slice(0, 10); }
+  function today() { const d = new Date(); const ms = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) + ((app.clock || 0) + (acct.user ? acct.shift : 0)) * 86400000; return new Date(ms).toISOString().slice(0, 10); }
   const s = () => app.s;
   // Test tools (skip days) only on this Mac's local server or its Wi-Fi address, never for players
   const TEST = /^(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname);
@@ -719,10 +827,16 @@ button:disabled { cursor: not-allowed; }
         <div><b>One way to lose</b>Going broke. Build all four strands instead.</div>
       </div>
       <div class="grow"></div>
-      <div class="stack">
+      ${!acct.checked ? `<div class="stack"><p class="fine mid">Checking your account…</p></div>` : signedOutCloud() ? `<div class="stack">
+        ${acct.busy ? `<p class="fine mid">Signing you in…</p>` : acct.clientId && !acct.gisError ? `<div id="gbtn" class="gbtn"></div>` : acct.gisError ? `<p class="fine mid">Google sign-in didn’t load. Check your connection, or play as a guest.</p>` : ''}
+        ${acct.devLogin && !acct.busy ? `<button class="btn wide" data-act="devLogin">Sign in as test player (local only)</button>` : ''}
+        <p class="fine mid">Sign in to keep your game safe and play it on any phone. No password.</p>
+        <button class="linkbtn" data-act="guest">${live ? 'Continue without signing in' : 'Play as a guest'}</button>
+      </div>` : `<div class="stack">
         ${live ? `<button class="btn primary wide" data-act="go" data-arg="home">Continue your life</button>` : `<button class="btn primary wide" data-act="go" data-arg="consent">Start your life</button>`}
         ${live ? `<button class="linkbtn" data-act="restart">Start a new life</button>` : ''}
-      </div>
+        ${acct.user ? `<p class="fine mid">Signed in as ${esc(acct.user.email)}</p>` : ''}
+      </div>`}
       <p class="fine">A game, not financial advice. Numbers are simplified. Adapted from <i>Money DNA</i> by Mack Comandante.</p>
     </div>`;
   }
@@ -734,7 +848,7 @@ button:disabled { cursor: not-allowed; }
       <div class="panel">
         <div class="lines">
           <div><span>Money answers are ranges</span><b>Never exact</b></div>
-          <div><span>Where it’s kept</span><b>On this phone only</b></div>
+          <div><span>Where it’s kept</span><b>${acct.user ? 'With your account' : 'On this phone only'}</b></div>
           <div><span>Shared with anyone</span><b>Never</b></div>
           <div><span>Every question</span><b>Can be skipped</b></div>
         </div>
@@ -1486,7 +1600,9 @@ button:disabled { cursor: not-allowed; }
       <div class="lines"><div><span>Streak · best</span><b>${g.streak} · ${g.bestStreak} days</b></div><div><span>Rest passes</span><b>${g.passes}</b></div><div><span>Shadow (${T[g.p.type].shadow.toLowerCase()})</span><b>${g.sh.mastered ? 'Mastered' : g.sh.meter + ' of 5'}</b></div></div>
       ${u.confirm ? `<div class="panel"><b>Start a new life? This one ends for good.</b><div class="grid2"><button class="btn small" data-act="noConfirm">Keep playing</button><button class="btn small" style="border-color:var(--bad);color:var(--bad)" data-act="restartNow">Start over</button></div></div>`
         : `<button class="btn wide" data-act="askRestart">Start a new life</button>`}
-      <p class="fine">A game, not financial advice. Saved on this phone only.</p>`;
+      ${acct.user ? `<div class="lines"><div><span>Signed in</span><b>${esc(acct.user.email)}</b></div></div><button class="btn small wide" data-act="signOut">Sign out</button>`
+        : CLOUD ? `<button class="btn small wide" data-act="toSignIn">Sign in with Google to save your game</button>` : ''}
+      <p class="fine">A game, not financial advice. ${acct.user ? 'Saved to your Google account.' : 'Saved on this phone only.'}</p>`;
   }
 
   // ---------- render ----------
@@ -1519,6 +1635,7 @@ button:disabled { cursor: not-allowed; }
     });
     const rf = document.getElementById('reportFile');
     if (rf) rf.addEventListener('change', () => readReport(rf.files && rf.files[0]));
+    mountGoogle();
     const dn = document.getElementById('dn');
     if (dn) dn.addEventListener('input', () => { app.intake.a.dreamName = dn.value; save(); });
     save();
@@ -1574,6 +1691,16 @@ button:disabled { cursor: not-allowed; }
     go(arg) { app.screen = arg; app.ui = {}; if (arg === 'home') openToday(); },
     restart() { app.ui = { sheet: 'menu', confirm: true }; if (!s() || s().over) { const c = app.clock; app = fresh(); app.clock = c; app.screen = 'consent'; } else { app.screen = 'home'; } },
     askRestart() { app.ui.confirm = true; },
+    guest() { app.guest = true; app.ui = {}; if (s() && !s().over) { app.screen = 'home'; openToday(); } else app.screen = 'consent'; },
+    toSignIn() { app.guest = false; app.ui = {}; app.screen = 'welcome'; },
+    devLogin() { signIn('auth/dev'); },
+    signOut() {
+      fetch(API + 'auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+      clearTimeout(pushTimer); const dev = deviceBits();
+      acct.user = null; acct.version = 0; lastPushed = null;
+      app = Object.assign(fresh(), dev, { ui: {}, guest: false }); // the game leaves this phone with the account
+      toast('<b>Signed out</b>Your game is safe in your account.');
+    },
     noConfirm() { app.ui.confirm = false; },
     restartNow() { const c = app.clock; app = fresh(); app.clock = c; app.screen = 'consent'; },
     startIntake() { app.intake = { step: 0, a: { age: 30 }, quiz: null }; app.screen = 'intake'; },
@@ -1795,7 +1922,8 @@ button:disabled { cursor: not-allowed; }
     if (e.key === 'Enter' && app.screen === 'intake') { const b = root.querySelector('[data-act="intakeNext"]'); if (b && !b.disabled) b.click(); }
   });
 
-  function start() {
+  // Fix up a loaded save so it never opens on a half-finished screen.
+  function tidy() {
     if (app.intake && app.intake.report && app.intake.report.reading) app.intake.report = null; // a reload interrupted reading a report
     if (app.screen === 'dayend' && !app.recap) app.screen = 'home';
     if (app.screen === 'streak' && !app.streakShow) app.screen = 'home';
@@ -1806,6 +1934,16 @@ button:disabled { cursor: not-allowed; }
     if (app.screen === 'turn' && !(s() && s().card)) app.screen = 'home';
     if (app.screen === 'home' && s() && s().card && !s().over) app.screen = 'turn'; // never strand a waiting card
     if (app.screen === 'away' && !(app.awayPages && app.awayPages.length)) app.screen = 'home';
+  }
+  async function start() {
+    tidy();
+    previewMode = /^#(streak|day|broke|legacy)$/.test(location.hash);
+    if (CLOUD && !previewMode) {
+      const was = app.screen; app.screen = 'welcome'; render(); // "Checking your account…" until we know
+      await checkAccount();
+      if (signedOutCloud() && !app.guest) { app.screen = 'welcome'; app.ui = {}; }
+      else if (app.screen === 'welcome') app.screen = was;
+    }
     if (location.hash === '#streak') { previewStreak(); render(); loadNews(); return; }
     if (location.hash === '#day') { app.recap = demoRecap(); app.ui = {}; app.screen = 'dayend'; render(); return; }
     if (app.screen === 'dayend' && !app.recap) app.screen = s() ? 'home' : 'welcome';

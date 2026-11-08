@@ -34,6 +34,9 @@ and ported 1:1 here.
 | `app/admin/` | Admin at `/admin`: login, dashboard (analytics per profile and quiz question), submissions table + detail, CSV export (`/api/admin/export`), per-person report PDF (`/api/admin/report/[id]`, admin only, and only for submissions with a full name and email) |
 | `lib/admin-auth.ts` / `lib/admin-data.ts` | Admin session (single `ADMIN_PASSWORD`, signed HttpOnly cookie, 8h) and the queries/aggregation behind the dashboard |
 | `supabase/migrations/*.sql` | Table `quiz_responses` + view `money_dna_leads` |
+| `public/fourstrands/` | The Four Strands game at `/fourstrands`. **Generated** by `Board game/companion/build-web.mjs`; edit the game there, not here |
+| `lib/fourstrands-auth.ts` + `app/api/fourstrands/{auth/google,auth/logout,me,save}` | Game accounts: "Continue with Google" only (no passwords). Verifies the Google ID token against Google's keys, then a signed HttpOnly `fs_session` cookie (60 days). Saves live in `fourstrands_players` (one row per Google account), with a version check so two phones can't overwrite each other (409 → the client switches to the newer save) |
+| `app/api/fourstrands/auth/dev` | Local test login without Google: only with `FOURSTRANDS_DEV_LOGIN=1` on localhost; 404 everywhere else |
 
 ## Data & privacy rules (do not break)
 - RLS is ON with **no policies**; the browser never talks to Supabase directly. Never expose `SUPABASE_SERVICE_ROLE_KEY` or add `NEXT_PUBLIC_` to it.
@@ -42,6 +45,7 @@ and ported 1:1 here.
 - Philippine Data Privacy Act (RA 10173) applies: a real privacy notice must be linked via `NEXT_PUBLIC_PRIVACY_URL` before launch.
 - The server ignores client-sent scores and recomputes them.
 - `/admin` shows names and emails. It requires `ADMIN_PASSWORD` (unset = admin disabled); every admin page calls `requireAdmin()` and every admin API checks `isAdminRequest()`. Pages are `noindex`.
+- Four Strands players: `fourstrands_players` stores the Google account's email, name and picture plus the game save. Same rules: server-only, RLS on with no policies. `GOOGLE_CLIENT_ID` unset = no sign-in UI (players play as guests on their phone). Never set `FOURSTRANDS_DEV_LOGIN` in production.
 - **One assessment per email.** A second assessment with a used email gets "That email is already associated with a previous assessment." (409). Enforced in the PATCH route and by the unique index on `lower(email)`. The repeat email gets its **original** report re-sent to that inbox, **once per email ever** (`report_resent_at`, claimed atomically; released if the send fails). The original result is never shown in the browser.
 
 ## Security notes

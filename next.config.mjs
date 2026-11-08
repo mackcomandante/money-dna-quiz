@@ -20,11 +20,13 @@ const csp = [
 // and pdf.js from cdnjs, which reads an uploaded Money DNA report on the player's phone.
 const gameCsp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com${isDev ? " 'unsafe-eval'" : ''}`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob:",
+  // accounts.google.com/gsi: the "Continue with Google" button (Google Identity Services)
+  `script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://accounts.google.com/gsi/client${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com",
   "font-src 'self' https://fonts.gstatic.com",
-  `connect-src 'self'${isDev ? ' ws: wss:' : ''}`,
+  `connect-src 'self' https://accounts.google.com/gsi/${isDev ? ' ws: wss:' : ''}`,
+  "frame-src https://accounts.google.com/gsi/",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
