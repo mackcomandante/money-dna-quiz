@@ -1,0 +1,1818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Four Strands: the Money DNA board game. Rags or riches: the money decisions that make or break you.">
+<meta name="theme-color" content="#0F1B2D">
+<base href="/fourstrands/">
+</head>
+<body style="margin:0">
+<title>Four Strands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
+<style>
+/* One phone-sized column; every screen fits 375×667 with no scrolling (long lists paginate). Bottom sheets for Money, Pockets, Strands, Coins and Menu. Single dark look, same tokens as the Money DNA quiz. */
+:root {
+  --ink: #0F1B2D; --surface: #17263D; --raised: #22344F; --line: #2C4060;
+  --text: #F2F5F9; --soft: #C9D4E3; --muted: #A9B6C8; --dim: #8796AB;
+  --amber: #F5B841; --coral: #F26B4B; --teal: #3CC3A8; --blue: #6F9BF2; --violet: #A98BF0;
+  --good: #3CC3A8; --bad: #F26B4B;
+  --display: 'Bricolage Grotesque', 'Avenir Next', system-ui, sans-serif;
+  --body: 'DM Sans', 'Helvetica Neue', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: radial-gradient(130% 90% at 50% 35%, #1B2B45 0%, #0F1B2D 55%, #080F1C 100%) fixed var(--ink); color: var(--text); font-family: var(--body); font-size: 14px; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+#app { height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column;
+  padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.grow { flex: 1; min-height: 0; }
+.kicker { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--k, var(--amber)); }
+.h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+.lead { margin: 0; font-size: 15px; line-height: 1.5; color: var(--soft); }
+.fine { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.row { display: flex; gap: 10px; align-items: center; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.btn { min-height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s, background .2s; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn.primary { background: var(--amber); border-color: var(--amber); color: #1A1404; }
+.btn.primary:disabled { background: var(--raised); border-color: var(--raised); color: var(--dim); }
+.btn:disabled { opacity: .6; }
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 40px; padding: 0 12px; font-size: 13px; border-radius: 11px; }
+.btn.wide { width: 100%; }
+.btn svg { width: 18px; height: 18px; }
+.linkbtn { min-height: 44px; border: 0; background: none; color: var(--soft); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; padding: 0 4px; }
+.iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.iconbtn svg { width: 20px; height: 20px; }
+.chip { font-size: 12px; font-weight: 700; color: var(--soft); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chip svg { width: 14px; height: 14px; }
+.chip.flame { color: var(--amber); }
+
+/* welcome */
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 17px; }
+.brand i { width: 22px; height: 22px; border-radius: 7px; background: conic-gradient(var(--coral) 0 25%, var(--amber) 0 50%, var(--teal) 0 75%, var(--blue) 0); flex: none; }
+.hero { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(44px, 14vw, 60px); line-height: .92; letter-spacing: -0.035em; }
+.hero span { display: block; color: var(--amber); }
+.tagline { margin: 0; font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.3; text-wrap: balance; }
+.helix { width: 100%; height: auto; display: block; max-width: 100%; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.facts div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 9px 11px; font-size: 12.5px; color: var(--soft); line-height: 1.35; }
+.facts b { display: block; font-family: var(--display); font-size: 16px; color: var(--text); }
+
+/* intake */
+.dots { display: flex; gap: 4px; }
+.dots i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.dots i.on { background: var(--amber); }
+.opts2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.opts1 { display: grid; gap: 8px; }
+.pick { min-height: 50px; border-radius: 13px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 14px; text-align: left; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; line-height: 1.25; }
+.pick.slim { min-height: 44px; }
+.pick.sel { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--surface)); }
+.pick .tick { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--dim); flex: none; display: grid; place-items: center; }
+.pick.sel .tick { background: var(--amber); border-color: var(--amber); color: #1A1404; }
+.pick .tick svg { width: 14px; height: 14px; }
+.typegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.typecard { text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.typecard.sel { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--ink)); }
+.typecard img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--c); object-fit: cover; }
+.typecard b { font-family: var(--display); font-size: 15px; line-height: 1.1; }
+.typecard span { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.typecard em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--c); letter-spacing: .04em; text-transform: uppercase; }
+.field input { width: 100%; min-height: 52px; border-radius: 13px; border: 1.5px solid var(--line); background: var(--surface); padding: 0 16px; font-size: 18px; }
+.upload { position: relative; overflow: hidden; }
+.upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.rscore { display: grid; grid-template-columns: 100px 1fr 40px; gap: 8px; align-items: center; font-size: 12.5px; }
+.rscore span { color: var(--c); font-weight: 700; }
+.rscore em { font-style: normal; text-align: right; color: var(--soft); font-variant-numeric: tabular-nums; }
+.amtrow { display: flex; flex-direction: column; gap: 5px; }
+.amtrow b { font-size: 13.5px; }
+.amts { display: grid; gap: 5px; }
+.amts button { min-height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 12px; padding: 0 2px; }
+.amts button.sel { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--surface)); }
+.agebox { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.agebox b { font-family: var(--display); font-size: 64px; min-width: 110px; text-align: center; font-variant-numeric: tabular-nums; }
+.agebox .iconbtn { width: 56px; height: 56px; font-size: 26px; font-weight: 700; }
+
+/* mirror and summaries */
+.lines { display: flex; flex-direction: column; gap: 6px; font-variant-numeric: tabular-nums; }
+.lines div { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; color: var(--soft); }
+.lines div b { color: var(--text); }
+.lines .tot { border-top: 1px solid var(--line); padding-top: 7px; }
+.lines .pos { color: var(--good); }
+.lines .neg { color: var(--bad); }
+.panel { border-radius: 16px; background: var(--surface); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.who { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.who img { width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid var(--c); object-fit: cover; flex: none; }
+.who b { font-family: var(--display); font-size: 19px; line-height: 1.05; display: block; }
+.who span { font-size: 12.5px; color: var(--c); font-weight: 700; }
+.ladder { display: flex; flex-direction: column; gap: 8px; }
+.srow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 10px 12px; }
+.srow b { font-family: var(--display); font-size: 15px; color: var(--c); }
+.srow span { font-size: 12.5px; color: var(--soft); line-height: 1.35; grid-column: 1 / -1; }
+.srow em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; }
+.tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; border-radius: 6px; padding: 2px 6px; margin-left: 6px; vertical-align: 2px; }
+.tag.strong { background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--c); }
+.tag.blind { background: color-mix(in srgb, var(--violet) 22%, transparent); color: var(--violet); }
+.bar { height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--c, var(--amber)); border-radius: 3px; transition: width .4s; }
+
+/* home */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.top .row { gap: 6px; }
+.hello { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hello .date { font-size: 12.5px; color: var(--muted); }
+.hello .date b { display: block; font-family: var(--display); font-size: 20px; color: var(--text); }
+.worth { text-align: right; font-size: 12px; color: var(--muted); }
+.worth b { display: block; font-family: var(--display); font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
+.strandgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; background: none; padding: 0; text-align: left; }
+.st { border-radius: 13px; background: var(--surface); border: 1px solid var(--line); padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.st.mine { border-color: color-mix(in srgb, var(--c) 55%, var(--line)); }
+.stn { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.stn b { font-family: var(--display); font-size: 15px; color: var(--c); }
+.stn em { font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stv { font-size: 11.5px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dreambox { border-radius: 13px; background: var(--surface); border: 1px solid var(--line); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.dreambox .between span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dreambox b { font-size: 13.5px; }
+.nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.nav button { min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11.5px; font-weight: 700; color: var(--soft); }
+.nav svg { width: 19px; height: 19px; }
+.today { border-radius: 16px; padding: 10px 12px; background: radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--amber) 16%, var(--surface)), var(--surface) 70%); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.pips { display: flex; gap: 5px; }
+.pips i { flex: 1; max-width: 40px; height: 6px; border-radius: 3px; background: var(--raised); }
+.pips i.on { background: var(--amber); }
+.pips i.x { background: var(--violet); }
+.extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* turn */
+.weekbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.weekbar .chip.pos { color: var(--good); }
+.weekbar .chip.neg { color: var(--bad); }
+.cardv { border-radius: 18px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--k); padding: 14px; display: flex; flex-direction: column; gap: 10px; animation: rise .28s ease-out; }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+.cardv h2 { margin: 0; font-family: var(--display); font-size: 22px; line-height: 1.12; letter-spacing: -0.01em; text-wrap: balance; }
+.cardv p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--soft); }
+.deal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.deal div { background: var(--raised); border-radius: 11px; padding: 7px 10px; display: flex; flex-direction: column; gap: 1px; font-variant-numeric: tabular-nums; }
+.deal span { font-size: 11px; color: var(--muted); }
+.deal b { font-size: 14px; }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { text-align: left; border-radius: 14px; border: 1.5px solid var(--line); background: var(--ink); padding: 9px 13px; min-height: 54px; display: flex; flex-direction: column; justify-content: center; gap: 2px; transition: border-color .15s, transform .12s; }
+.opt:hover:not(:disabled) { border-color: var(--k, var(--amber)); }
+.opt:active:not(:disabled) { transform: scale(.99); }
+.opt b { font-size: 14.5px; line-height: 1.25; }
+.opt span { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.opt:disabled { opacity: .55; }
+.opt:disabled span { color: var(--amber); }
+.result { border-radius: 16px; background: var(--raised); padding: 14px; font-size: 15px; line-height: 1.45; display: flex; flex-direction: column; gap: 8px; animation: rise .28s ease-out; }
+.result.good { box-shadow: inset 4px 0 0 var(--good); }
+.result.bad { box-shadow: inset 4px 0 0 var(--bad); }
+.news { border-radius: 14px; padding: 11px 13px; background: color-mix(in srgb, var(--c, var(--amber)) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c, var(--amber)) 50%, var(--line)); font-size: 13.5px; line-height: 1.4; animation: rise .3s ease-out; }
+.news b { display: block; font-family: var(--display); font-size: 16px; color: var(--c, var(--amber)); }
+
+/* sheets */
+.back { position: fixed; inset: 0; z-index: 20; background: rgba(6, 11, 20, .62); display: flex; align-items: flex-end; justify-content: center; }
+.back.anim { animation: fade .2s; }
+@keyframes fade { from { opacity: 0; } }
+.sheet { width: 100%; max-width: 480px; max-height: 96%; overflow: hidden; background: var(--surface); border-radius: 22px 22px 0 0; border-top: 4px solid var(--k, var(--amber));
+  padding-top: 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 11px; }
+.back.anim .sheet { animation: up .28s cubic-bezier(.2,.8,.2,1); }
+@keyframes up { from { transform: translateY(30px); opacity: .4; } }
+.sh { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sh h2 { margin: 0; font-family: var(--display); font-size: 22px; line-height: 1.1; }
+.close { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); display: grid; place-items: center; flex: none; }
+.close svg { width: 18px; height: 18px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--ink); padding: 4px; border-radius: 12px; }
+.tabs button { min-height: 38px; border: 0; border-radius: 9px; background: none; font-weight: 700; font-size: 12.5px; color: var(--muted); }
+.tabs button.sel { background: var(--raised); color: var(--text); }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; background: var(--ink); border-radius: 12px; padding: 8px 12px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; min-height: 54px; }
+.item b { font-size: 13.5px; }
+.item span { font-size: 12px; color: var(--muted); grid-column: 1; }
+.item .btn { grid-row: 1 / span 2; grid-column: 2; }
+.empty { font-size: 13px; color: var(--muted); padding: 14px; text-align: center; background: var(--ink); border-radius: 12px; }
+.pager { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
+.pocket { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; align-items: center; background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 4px 6px 4px 12px; }
+.pocket b { font-size: 14px; }
+.pocket.nec { background: transparent; border-style: dashed; min-height: 46px; }
+.pocket.nec output { color: var(--soft); }
+.pocket span { font-size: 11.5px; color: var(--muted); grid-column: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pocket { min-width: 0; }
+.stepper { grid-row: 1 / span 2; grid-column: 2; display: flex; align-items: center; gap: 4px; }
+.stepper button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised); font-size: 20px; font-weight: 700; display: grid; place-items: center; }
+.stepper output { min-width: 44px; text-align: center; font-weight: 800; font-family: var(--display); font-size: 17px; font-variant-numeric: tabular-nums; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.coinbig { font-family: var(--display); font-weight: 800; font-size: 34px; display: flex; align-items: center; gap: 8px; }
+.coinbig svg { width: 30px; height: 30px; color: var(--amber); }
+.pack { min-height: 60px; border-radius: 12px; border: 1px solid var(--line); background: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-weight: 800; font-size: 15px; }
+.pack span { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.seg button { min-height: 40px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--ink); font-weight: 700; font-size: 12.5px; }
+.seg button.sel { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--ink)); }
+.tbody { display: flex; flex-direction: column; gap: 10px; }
+.tbody .cardv { animation: none; }
+/* board */
+.board { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 3px; padding: 5px; border-radius: 16px;
+  background: linear-gradient(135deg, #F3EAD6, #E7DBC0); border: 3px solid #0B1424; box-shadow: 0 0 0 2px #C9A45C, 0 14px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.5); }
+.sp { position: relative; min-height: 0; border-radius: 7px; background: #FBF7EE; border: 1px solid rgba(11,20,36,.22); overflow: visible; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; color: #fff; box-shadow: 0 1px 0 rgba(11,20,36,.12); }
+.sp .band { flex: 0 0 46%; background: var(--sc); border-radius: 6px 6px 0 0; display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); }
+.sp .band svg { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 0 rgba(0,0,0,.2)); }
+.sp .sl { flex: 1; display: grid; place-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: #1B2433; text-align: center; padding: 0 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sp.corner { background: var(--sc); border-color: rgba(11,20,36,.35); background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.1) 0 6px, transparent 6px 12px); }
+.sp.corner .band { background: transparent; box-shadow: none; }
+.sp.corner .band svg { width: 26px; height: 26px; }
+.sp.corner .sl { color: #fff; font-size: 10px; text-shadow: 0 1px 0 rgba(0,0,0,.25); padding-bottom: 6px; }
+.startarrow { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-style: normal; font-size: 7.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; opacity: .9; }
+.sp.corner.lightc .sl, .sp.corner.lightc .startarrow { color: #1B2433; text-shadow: none; }
+.sp.corner.lightc .band svg { color: #1B2433; filter: none; }
+.sp.here { box-shadow: 0 0 0 2px #0B1424, 0 0 0 4px var(--sc), 0 0 16px color-mix(in srgb, var(--sc) 70%, transparent); z-index: 2; }
+.tok { position: absolute; right: -6px; top: -14px; width: 32px; height: 43px; z-index: 3; filter: drop-shadow(0 0 1px #0B1424) drop-shadow(0 3px 3px rgba(0,0,0,.45)); animation: hop .28s ease-out; }
+@keyframes hop { 0% { transform: translateY(-12px) scale(1.1); } 60% { transform: translateY(1px) scale(.97); } 100% { transform: none; } }
+.center { grid-area: 2 / 2 / 7 / 5; min-height: 0; overflow: hidden; border-radius: 12px; padding: 8px 9px 7px; display: flex; flex-direction: column; gap: 5px; border: 2px solid #C9A45C; box-shadow: inset 0 2px 10px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.4); background: radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--pc) 16%, var(--ink)), var(--ink) 70%); }
+.cwho { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.cwho img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--pc); object-fit: cover; flex: none; }
+.cwho div { min-width: 0; }
+.cwho b { display: block; font-family: var(--display); font-size: 15px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cwho span { font-size: 11px; color: var(--muted); }
+.center .pips i { height: 4px; }
+.cnw { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.cnw span { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.cnw b { font-family: var(--display); font-size: 21px; font-variant-numeric: tabular-nums; }
+.clines { display: flex; flex-direction: column; gap: 2px; font-variant-numeric: tabular-nums; }
+.clines div { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
+.clines b { color: var(--text); }
+.clines b.pos { color: var(--good); }
+.clines b.neg { color: var(--bad); }
+.cwarn { text-align: left; border-radius: 10px; border: 1px solid var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--ink)); padding: 6px 8px; font-size: 11.5px; color: var(--soft); }
+.cwarn b { display: block; color: var(--bad); font-size: 13px; }
+.cstr { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; border: 0; background: none; padding: 0; text-align: left; }
+.cstr div { display: grid; grid-template-columns: 1fr auto; gap: 2px 4px; align-items: center; }
+.cstr span { font-size: 11px; font-weight: 700; color: var(--c); }
+.cstr em { font-style: normal; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cstr .bar { grid-column: 1 / -1; height: 4px; }
+.cdream { border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+.cdream span { font-size: 11px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdream .bar { height: 4px; }
+.center .btn.primary { min-height: 44px; font-size: 14px; padding: 0 8px; }
+.center .btn.small { min-height: 36px; font-size: 12px; padding: 0 4px; }
+.cdone { font-family: var(--display); font-size: 14px; font-weight: 800; text-align: center; white-space: nowrap; }
+.cdone .cnext { font-family: var(--body); font-size: 11.5px; }
+.testday { min-height: 26px; font-size: 12px; align-self: center; }
+.cnext { text-align: center; font-size: 12.5px; color: var(--amber); font-weight: 700; font-variant-numeric: tabular-nums; }
+.xbtn { min-height: 38px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px; }
+.xbtn b { font-size: 12.5px; }
+.xbtn span { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.xbtn:disabled { opacity: .55; }
+.center .btn.ghost { min-height: 34px; font-size: 12px; color: var(--soft); }
+.cnav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.cnav button { min-height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; color: var(--soft); }
+.cnav svg { width: 18px; height: 18px; }
+.dierow { display: flex; align-items: center; gap: 16px; justify-content: center; min-height: 76px; }
+/* 3D die: a cube of six ivory faces; the cube's rotation decides which face points at you */
+.die3d { width: 50px; height: 50px; perspective: 380px; flex: none; }
+.die3d.land { animation: land .5s cubic-bezier(.2,1.6,.4,1); }
+.cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+.face { position: absolute; inset: 0; border-radius: 10px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 8px; gap: 2px; backface-visibility: hidden;
+  background: radial-gradient(130% 130% at 30% 25%, #FFFFFF 0%, #F4EFE4 55%, #D9D1C1 100%); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), inset -3px -4px 8px rgba(120,100,70,.28), inset 3px 3px 6px rgba(255,255,255,.9); }
+.face i { border-radius: 50%; }
+.face i.on { background: radial-gradient(circle at 35% 35%, #4A5568 0%, #1A2233 55%, #0B111C 100%); box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.7); }
+.f1 { transform: translateZ(25px); }
+.f6 { transform: rotateY(180deg) translateZ(25px); }
+.f3 { transform: rotateY(90deg) translateZ(25px); }
+.f4 { transform: rotateY(-90deg) translateZ(25px); }
+.f2 { transform: rotateX(90deg) translateZ(25px); }
+.f5 { transform: rotateX(-90deg) translateZ(25px); }
+.dieshadow { position: absolute; left: 50%; bottom: -10px; width: 44px; height: 8px; margin-left: -22px; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(3px); }
+.diewrap { position: relative; }
+.diewrap.grab { cursor: grab; touch-action: none; padding: 10px; margin: -10px; border-radius: 16px; }
+.diewrap.grab.grabbing { cursor: grabbing; }
+.diewrap.grab:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.diewrap.grab .die3d { animation: nudge 2.4s ease-in-out infinite; }
+@keyframes nudge { 0%, 80%, 100% { transform: none; } 88% { transform: rotate(-6deg); } 94% { transform: rotate(5deg); } }
+.rollhint { display: flex; flex-direction: column; gap: 1px; }
+.rollhint b { font-family: var(--display); font-size: 15px; color: var(--amber); }
+.rollhint span { font-size: 11.5px; color: var(--muted); }
+@keyframes land { 0% { transform: translateY(-14px) scale(1.08); } 55% { transform: translateY(2px) scale(.96); } 100% { transform: none; } }
+/* streak celebration */
+.streakscreen { position: relative; gap: 10px; }
+.streakscreen .confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
+.practice { margin: 4px 0 0; font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--soft); animation: rise .4s ease-out both; }
+.practice b { color: var(--amber); }
+.bigflame { width: 88px; height: 104px; animation: flamein .6s cubic-bezier(.2,1.5,.4,1) both; filter: drop-shadow(0 8px 28px rgba(242,107,75,.35)); }
+.bigflame svg { width: 100%; height: 100%; animation: flicker 1.4s ease-in-out infinite alternate; transform-origin: 50% 92%; }
+@keyframes flamein { from { transform: scale(.2) translateY(30px); opacity: 0; } }
+@keyframes flicker { from { transform: scale(1) rotate(-2deg); } to { transform: scale(1.04, .97) rotate(2deg); } }
+.streaknum { margin-top: 2px; line-height: .9; }
+.streaknum b { font-family: var(--display); font-weight: 800; font-size: 84px; letter-spacing: -0.04em; display: inline-block; background: linear-gradient(180deg, #F26B4B 0%, #E8505B 45%, #F5B841 100%); -webkit-background-clip: text; background-clip: text; color: transparent; font-variant-numeric: tabular-nums; }
+.streaknum.pop b { animation: numpop .55s cubic-bezier(.2,1.8,.4,1); }
+@keyframes numpop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.streakword { margin: -4px 0 4px; font-family: var(--display); font-weight: 800; font-size: 24px; color: #F2894B; }
+.weekrow { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.wlabels, .wpills { display: grid; grid-template-columns: repeat(7, 40px); }
+.wlabels span { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.wlabels span.now { color: var(--amber); }
+.wd { height: 38px; display: grid; place-items: center; position: relative; }
+.wd i { width: 32px; height: 32px; border-radius: 50%; background: var(--raised); display: grid; place-items: center; color: #1A1404; position: relative; z-index: 1; }
+.wd i svg { width: 15px; height: 15px; }
+.wd.on::before { content: ""; position: absolute; inset: 1px 2px; border-radius: 19px; background: #F2894B; box-shadow: 0 0 0 2px #FBD9C4; }
+.wd.on.jl::before { left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; box-shadow: 0 -2px 0 #FBD9C4, 0 2px 0 #FBD9C4; }
+.wd.on.jr::before { right: -1px; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.wd.on.jl.jr::before { box-shadow: 0 -2px 0 #FBD9C4, 0 2px 0 #FBD9C4; }
+.wd.on.jr:not(.jl)::before { box-shadow: -2px 0 0 #FBD9C4, 0 -2px 0 #FBD9C4, 0 2px 0 #FBD9C4; }
+.wd.on.jl:not(.jr)::before { box-shadow: 2px 0 0 #FBD9C4, 0 -2px 0 #FBD9C4, 0 2px 0 #FBD9C4; }
+.wd.on i { background: transparent; }
+.wd.now i { animation: daypop .6s .5s cubic-bezier(.2,1.8,.4,1) both; }
+@keyframes daypop { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.streakline { font-size: 14.5px; max-width: 300px; text-wrap: balance; }
+.rewards { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.rewards .chip { color: var(--amber); animation: rise .4s ease-out both; }
+.hermes { border-radius: 14px; border: 1px solid var(--line); background: var(--surface); padding: 12px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.hermes p { margin: 0; font-family: var(--display); font-weight: 700; font-size: 15px; }
+.hermes a { text-decoration: none; color: var(--text); }
+.dayend { gap: 8px; }
+.recapgrid i.warn { color: var(--bad); }
+.congrats { display: flex; align-items: center; gap: 10px; border-radius: 16px; padding: 10px 12px; background: linear-gradient(120deg, #F26B4B, #F5B841); color: #1A1404; box-shadow: 0 8px 24px rgba(242,107,75,.35); animation: congrats .6s cubic-bezier(.2,1.6,.4,1) both; }
+.congrats > svg { width: 42px; height: 46px; flex: none; color: #FFF3CF; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+.congrats > div { flex: 1; min-width: 0; }
+.coinbadge { flex: none; display: flex; flex-direction: column; align-items: center; font-style: normal; font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1; background: rgba(255,255,255,.35); border-radius: 12px; padding: 6px 8px; color: #1A1404; }
+.coinbadge svg { width: 18px; height: 18px; margin-bottom: 2px; }
+.coinbadge small { font-family: var(--body); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.remind { display: flex; gap: 10px; align-items: center; font-size: 13.5px; line-height: 1.4; color: var(--soft); }
+.remind svg { width: 22px; height: 22px; color: var(--amber); flex: none; }
+.remind b { color: var(--amber); }
+.congrats b { display: block; font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1.05; }
+.congrats span { font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+@keyframes congrats { 0% { transform: scale(.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.hermes.row2 { flex-direction: row; align-items: center; justify-content: space-between; text-align: left; padding: 8px 10px; }
+.hermes.row2 p { font-size: 13px; }
+.hermes.row2 .btn { white-space: normal; text-align: center; max-width: 52%; min-height: 40px; line-height: 1.2; }
+.recapgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.recapgrid div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 9px 11px; display: flex; flex-direction: column; gap: 2px; }
+.recapgrid span { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.recapgrid i { font-style: normal; font-size: 11px; color: var(--teal); font-weight: 700; }
+.recapgrid b { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; }
+.recapgrid b.pos { color: var(--good); }
+.recapgrid b.neg { color: var(--bad); }
+.moments { display: flex; flex-direction: column; gap: 8px; }
+.moments div { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 12px; padding: 7px 11px; }
+.moments div.pos { border-left-color: var(--good); }
+.moments div.neg { border-left-color: var(--bad); }
+.moments span { grid-column: 1 / -1; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.moments b { font-size: 14px; }
+.moments em { font-style: normal; font-weight: 800; font-family: var(--display); font-variant-numeric: tabular-nums; }
+.moments .pos em { color: var(--good); }
+.moments .neg em { color: var(--bad); }
+.vol { display: grid; grid-template-columns: 96px 1fr 40px; gap: 10px; align-items: center; }
+.vol label { font-size: 14px; }
+.vol input { width: 100%; accent-color: var(--amber); height: 28px; }
+.vol output { font-size: 12.5px; font-weight: 700; color: var(--soft); text-align: right; font-variant-numeric: tabular-nums; }
+.cgoal span { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.cgoal b { font-size: 11px; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cgoal em { font-style: normal; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.teaser { width: 100%; border-radius: 14px; padding: 10px 14px; border: 1px dashed color-mix(in srgb, var(--amber) 60%, var(--line)); background: color-mix(in srgb, var(--amber) 8%, var(--surface)); text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.teaser span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+.teaser b { font-size: 14.5px; line-height: 1.35; }
+.remind .btn { flex: none; }
+.shareimg { width: 100%; max-height: 52vh; object-fit: contain; border-radius: 14px; background: #0B1424; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 40; width: min(440px, calc(100% - 32px)); border-radius: 14px; background: var(--text); color: var(--ink); padding: 11px 14px; font-size: 13.5px; line-height: 1.35; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: rise .3s ease-out; }
+.toast b { display: block; font-family: var(--display); font-size: 16px; }
+.bigav { width: 84px; height: 84px; border-radius: 50%; border: 3px solid var(--c); object-fit: cover; }
+.centered { align-items: center; text-align: center; justify-content: center; }
+.storyl { display: flex; flex-direction: column; gap: 6px; }
+.storyl div { font-size: 14px; color: var(--soft); display: flex; gap: 8px; }
+.storyl div::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); margin-top: 7px; flex: none; }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+</style>
+
+<div id="app"></div>
+
+<script src="engine.js" charset="utf-8"></script>
+<script>
+(function () {
+  const F = window.FS;
+  const KEY = 'four-strands-companion-v1';
+  const root = document.getElementById('app');
+  const T = F.TYPES;
+  const SK = F.STRANDS;
+
+  const ICON = {
+    menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    flame: '<svg viewBox="0 0 120 130"><path d="M60 12C70 32 98 44 98 80C98 104 81 122 60 122S22 104 22 80C22 66 28 55 36 48C37 56 40 61 45 63C44 44 49 28 60 12Z" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><path d="M60 70C66 80 74 87 74 98A14 14 0 0 1 46 98C46 87 54 80 60 70Z" fill="#FFE9BF"/></svg>',
+    coin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10c0-1.2 1.1-2 2.5-2s2.5.7 2.5 1.8c0 2.6-5 1.4-5 4.2 0 1.1 1.1 2 2.5 2s2.5-.8 2.5-2" stroke-linecap="round"/></svg>',
+    money: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    pockets: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v6a8 8 0 0 1-16 0z"/><path d="M8 9h8"/></svg>',
+    strands: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3c0 6 10 6 10 12s-10 3-10 6M17 3c0 6-10 6-10 12s10 3 10 6"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  };
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const S = (n) => F.short(n);
+  const strandColor = (k) => k === 'shadow' ? '#A98BF0' : (SK[k] ? SK[k].color : '#F5B841');
+  const KIND_LABEL = { deal: 'Opportunity', windfall: 'Money in', pamilya: 'Pamilya', gastos: 'Temptation', calamity: 'Calamity', seguro: 'Seguro', bayanihan: 'Bayanihan', kindness: 'Kindness', dream: 'Pangarap', raket: 'Raket', school: 'School', life: 'Life', shadow: 'Your shadow', cause: 'A cause', estate: 'Estate', market: 'Market', quiet: 'A quiet week', echo: 'An echo of your choice', rescue: 'Debt help', budget: 'Budget' };
+
+  // ---------- sound: small effects made with Web Audio, no files. They start only after a tap, as browsers require. ----------
+  let audioCtx = null;
+  // volume: 0-100 per bus; the sources are quiet, so the buses boost them, and a limiter keeps loud moments clean
+  const vol = (k) => { const v = app[k]; return v == null ? (k === 'musicVol' ? 70 : 85) : v; };
+  const busLevel = (v) => Math.pow(v / 100, 1.5) * 3;
+  let sfxBus = null, musicBus = null;
+  function buses(c) {
+    if (sfxBus) return;
+    const lim = c.createDynamicsCompressor();
+    lim.threshold.value = -14; lim.knee.value = 8; lim.ratio.value = 6; lim.attack.value = 0.003; lim.release.value = 0.2;
+    lim.connect(c.destination);
+    sfxBus = c.createGain(); sfxBus.gain.value = busLevel(vol('sfxVol')); sfxBus.connect(lim);
+    musicBus = c.createGain(); musicBus.gain.value = busLevel(vol('musicVol')); musicBus.connect(lim);
+  }
+  function setVolume(k, v) {
+    app[k] = v;
+    if (k === 'sfxVol') app.sound = v > 0; else app.music = v > 0;
+    const c = audioCtx; if (!c || !sfxBus) return;
+    (k === 'sfxVol' ? sfxBus : musicBus).gain.setTargetAtTime(busLevel(v), c.currentTime, 0.03);
+  }
+  function sfxOut() { return sfxBus; }
+  function getCtx() {
+    try {
+      if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; audioCtx = new AC(); buses(audioCtx); }
+      if (audioCtx.state !== 'running') audioCtx.resume();
+      return audioCtx;
+    } catch (e) { return null; }
+  }
+  // Phones only allow sound after a touch "unlocks" it. On the first touches, start the audio, play a silent blip
+  // (the classic iPhone unlock), and ask the phone to treat this as media so the ring/silent switch doesn't mute it.
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    const c = getCtx(); if (!c) return;
+    try { const b = c.createBuffer(1, 1, 22050), src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(0); } catch (e) {}
+    if (c.state === 'running') ['touchend', 'pointerup', 'click', 'keydown'].forEach((ev) => document.removeEventListener(ev, unlockAudio, true));
+    else c.resume().then(() => { if (app.screen !== 'welcome') musicActive(); }).catch(() => {});
+  }
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, unlockAudio, true));
+  const SFX = (() => {
+    const on = () => app.sound !== false && vol('sfxVol') > 0;
+    function ac() { return on() ? getCtx() : null; }
+    function tone(freq, dur, opt) {
+      const c = ac(); if (!c) return;
+      opt = opt || {};
+      const t = c.currentTime + (opt.at || 0), o = c.createOscillator(), g = c.createGain();
+      o.type = opt.type || 'sine'; o.frequency.setValueAtTime(freq, t);
+      if (opt.to) o.frequency.exponentialRampToValueAtTime(opt.to, t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(opt.vol || 0.15, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(sfxOut()); o.start(t); o.stop(t + dur + 0.02);
+    }
+    function noise(dur, opt) {
+      const c = ac(); if (!c) return;
+      opt = opt || {};
+      const t = c.currentTime + (opt.at || 0), len = Math.max(1, Math.floor(c.sampleRate * dur));
+      const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = c.createBufferSource(), flt = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; flt.type = opt.filter || 'bandpass'; flt.frequency.setValueAtTime(opt.freq || 2500, t);
+      if (opt.to) flt.frequency.exponentialRampToValueAtTime(opt.to, t + dur);
+      g.gain.setValueAtTime(opt.vol || 0.2, t);
+      src.connect(flt); flt.connect(g); g.connect(sfxOut()); src.start(t);
+    }
+    return {
+      rattle(p) { noise(0.035, { freq: 3200 - p * 1200, vol: 0.32 }); tone(900 - p * 300, 0.03, { type: 'square', vol: 0.025 }); },
+      land() { tone(150, 0.22, { to: 70, vol: 0.4 }); noise(0.09, { freq: 900, vol: 0.3, filter: 'lowpass' }); },
+      // a die thrown on a casino table: felt rumble, a hard first hit, then quicker, quieter clacks as it bounces and settles
+      diceRoll() {
+        const c = ac(); if (!c) return;
+        noise(1.15, { freq: 260, vol: 0.07, filter: 'lowpass' });
+        const clack = (at, v) => {
+          noise(0.014 + Math.random() * 0.01, { at, freq: 2400 + Math.random() * 2200, vol: v, filter: 'bandpass' });
+          tone(1500 + Math.random() * 1300, 0.035, { at, type: 'triangle', vol: v * 0.22 });
+          tone(380 + Math.random() * 120, 0.05, { at, type: 'sine', vol: v * 0.25 });
+        };
+        let t = 0.06, gap = 0.2, v = 0.55;
+        for (let i = 0; i < 9; i++) {
+          clack(t, v);
+          if (Math.random() < 0.6) clack(t + 0.018 + Math.random() * 0.025, v * 0.45); // the die's corners hit twice
+          t += gap * (0.8 + Math.random() * 0.4); gap *= 0.72; v *= 0.8;
+        }
+        for (let i = 0; i < 6; i++) clack(t + i * (0.03 + Math.random() * 0.02), 0.12 * (1 - i / 6)); // rattling to rest
+        clack(1.18, 0.18); clack(1.23, 0.1); // the final click-click as it settles
+      },
+      hop(i) { tone(520 + i * 70, 0.08, { type: 'triangle', vol: 0.12 }); },
+      // the card rises: a soft paper flick and a gentle two-note chime (no noisy whoosh)
+      card() { noise(0.05, { freq: 5000, vol: 0.03, filter: 'highpass' }); tone(784, 0.16, { type: 'triangle', vol: 0.07 }); tone(1175, 0.22, { type: 'sine', vol: 0.05, at: 0.07 }); },
+      tap() { tone(700, 0.05, { type: 'triangle', vol: 0.08 }); },
+      good() { tone(660, 0.12, { type: 'triangle', vol: 0.14 }); tone(990, 0.18, { type: 'triangle', vol: 0.12, at: 0.09 }); },
+      bad() { tone(240, 0.22, { type: 'sawtooth', to: 150, vol: 0.06 }); },
+      level() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, { type: 'triangle', vol: 0.12, at: i * 0.08 })); },
+      // the streak celebration: a brassy "ta-da!" and a crowd applauding
+      streak() {
+        const c = ac(); if (!c) return;
+        const brass = (freq, dur, at, vol) => {
+          const t = c.currentTime + at, g = c.createGain(), flt = c.createBiquadFilter(), vib = c.createOscillator(), vibG = c.createGain();
+          flt.type = 'lowpass'; flt.Q.value = 2;
+          flt.frequency.setValueAtTime(500, t); flt.frequency.exponentialRampToValueAtTime(3600, t + 0.06); flt.frequency.exponentialRampToValueAtTime(1800, t + Math.min(dur, 0.5));
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03); g.gain.setValueAtTime(vol, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          vib.frequency.value = 5.5; vibG.gain.value = dur > 0.4 ? freq * 0.008 : 0; vib.connect(vibG);
+          [0, 6, -6].forEach((cents) => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(freq, t); o.detune.value = cents; vibG.connect(o.frequency); o.connect(flt); o.start(t); o.stop(t + dur + 0.05); });
+          vib.start(t); vib.stop(t + dur + 0.05);
+          flt.connect(g); g.connect(sfxOut());
+        };
+        // "ta" (a quick pickup), then "daaa" (a big held major chord)
+        [392, 494, 587].forEach((f) => brass(f, 0.14, 0, 0.05));
+        [523, 659, 784, 1047].forEach((f) => brass(f, 1.25, 0.17, 0.05));
+        tone(131, 1.2, { type: 'triangle', vol: 0.12, at: 0.17 });
+        noise(0.35, { at: 0.17, freq: 6000, vol: 0.05, filter: 'highpass' }); // a cymbal-like shimmer on the hit
+        // applause: lots of single claps, swelling then fading, over a soft crowd murmur
+        noise(3.0, { at: 0.35, freq: 1500, vol: 0.05, filter: 'lowpass' });
+        for (let k = 0; k < 170; k++) {
+          const at = 0.35 + Math.pow(Math.random(), 1.4) * 2.8;
+          const fade = Math.max(0.15, 1 - (at - 0.35) / 2.9);
+          noise(0.008 + Math.random() * 0.014, { at, freq: 900 + Math.random() * 1800, vol: (0.12 + Math.random() * 0.22) * fade, filter: 'bandpass' });
+        }
+        // two cheering whistles
+        tone(1700, 0.45, { at: 0.6, type: 'sine', to: 2600, vol: 0.05 });
+        tone(2000, 0.35, { at: 1.3, type: 'sine', to: 2900, vol: 0.04 });
+      },
+    };
+  })();
+
+  // ---------- music: an original, gentle loop made with Web Audio. It starts on the first tap and pauses when the game is hidden. ----------
+  const MUSIC = (() => {
+    const BPM = 92, EIGHTH = 60 / BPM / 2;
+    const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    // two sections of four bars: [bass note, chord notes]
+    const A = [[48, [60, 64, 67]], [43, [59, 62, 67]], [45, [57, 60, 64]], [41, [57, 60, 65]]]; // C  G  Am  F
+    const B = [[45, [57, 60, 64]], [41, [57, 60, 65]], [48, [60, 64, 67]], [43, [59, 62, 67]]]; // Am F  C  G
+    const MELODY = [[76, 74, 72, 74], [74, 71, 67, 71], [72, 69, 67, 69], [69, 72, 74, 72]]; // one note per beat, C major pentatonic
+    let master = null, timer = null, next = 0, step = 0, playing = false;
+    const wanted = () => app.music !== false && vol('musicVol') > 0;
+    function voice(c, type, freq, t, dur, vol, cutoff) {
+      const o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+      o.type = type; o.frequency.setValueAtTime(freq, t);
+      f.type = 'lowpass'; f.frequency.setValueAtTime(cutoff || 2400, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.02, dur / 4)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function pad(c, notes, t, dur) {
+      notes.forEach((n) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(mtof(n), t); o.detune.value = (Math.random() - 0.5) * 8;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.018, t + 0.35); g.gain.setValueAtTime(0.018, t + dur - 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+      });
+    }
+    function hat(c, t, vol) {
+      const len = Math.floor(c.sampleRate * 0.03), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; f.type = 'highpass'; f.frequency.value = 7000; g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(master); src.start(t);
+    }
+    function kick(c, t) {
+      const o = c.createOscillator(), g = c.createGain();
+      o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.14);
+      g.gain.setValueAtTime(0.09, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.2);
+    }
+    function play8th(c, t) {
+      const bar = Math.floor(step / 8), pos = step % 8, section = Math.floor(bar / 4) % 4; // A A' B B'
+      const [root, chord] = (section < 2 ? A : B)[bar % 4];
+      if (pos === 0) pad(c, chord, t, EIGHTH * 8);
+      if (pos === 0 || pos === 4) { voice(c, 'sine', mtof(root - 12 + 12), t, EIGHTH * 3.5, 0.075, 600); kick(c, t); }
+      if (pos === 6) voice(c, 'sine', mtof(root + 7), t, EIGHTH * 1.5, 0.04, 600);
+      const arp = [0, 1, 2, 1, 2, 1, 0, 1][pos];
+      voice(c, 'triangle', mtof(chord[arp] + 12), t, EIGHTH * 1.6, 0.03, 2600);
+      hat(c, t + (pos % 2 ? 0 : EIGHTH * 0.5), pos % 2 ? 0.012 : 0.02);
+      if ((section === 1 || section === 3) && pos % 2 === 0) voice(c, 'sine', mtof(MELODY[bar % 4][pos / 2]), t, EIGHTH * 1.8, 0.035, 3000);
+      step = (step + 1) % (8 * 16);
+    }
+    function tick() {
+      const c = getCtx(); if (!c || !master) return;
+      while (next < c.currentTime + 0.25) { play8th(c, next); next += EIGHTH; }
+    }
+    return {
+      start() {
+        if (playing || !wanted() || document.hidden) return;
+        const c = getCtx(); if (!c) return;
+        if (!master) { master = c.createGain(); master.gain.value = 0.0001; master.connect(musicBus); }
+        master.gain.cancelScheduledValues(c.currentTime);
+        master.gain.setValueAtTime(Math.max(0.0001, master.gain.value), c.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.85, c.currentTime + 1.5);
+        next = c.currentTime + 0.05; playing = true;
+        timer = setInterval(tick, 80); tick();
+      },
+      stop() {
+        if (!playing) return;
+        playing = false; clearInterval(timer); timer = null;
+        const c = getCtx(); if (c && master) { master.gain.cancelScheduledValues(c.currentTime); master.gain.setValueAtTime(master.gain.value, c.currentTime); master.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.4); }
+      },
+      // lower the music while something else should be heard
+      duck(sec) {
+        const c = getCtx(); if (!c || !master || !playing) return;
+        const t = c.currentTime;
+        master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+        master.gain.exponentialRampToValueAtTime(0.15, t + 0.15); master.gain.setValueAtTime(0.15, t + sec); master.gain.exponentialRampToValueAtTime(0.85, t + sec + 1.2);
+      },
+      get playing() { return playing; },
+    };
+  })();
+  // music plays only while you're actually playing: it stops when the game is hidden, loses focus,
+  // or after a minute without a tap, and comes back on your next tap
+  let idleTimer = null;
+  function musicActive() { clearTimeout(idleTimer); MUSIC.start(); idleTimer = setTimeout(() => MUSIC.stop(), 60000); }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC.stop(); else if (app.screen === 'home') render(); });
+  setInterval(() => { const g = s(); if (g && !g.over && app.screen === 'home' && !app.ui.anim && !app.ui.sheet && g.day && g.day.date !== today()) render(); }, 60000);
+  window.addEventListener('blur', () => { if (!('ontouchstart' in window)) MUSIC.stop(); }); // phones fire blur oddly; they pause via visibility instead
+  window.addEventListener('pagehide', () => MUSIC.stop());
+
+  // ---------- state ----------
+  let app = load() || fresh();
+  function fresh() { return { screen: 'welcome', intake: { step: 0, a: {}, quiz: null }, s: null, clock: 0, mirror: 0, ui: {} }; }
+  function save() { try { const c = Object.assign({}, app, { ui: app.screen === 'away' ? { awayIdx: app.ui.awayIdx || 0 } : {} }); localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} }
+  function load() { try { const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if (x && x.screen) { x.ui = x.screen === 'away' ? (x.ui || {}) : {}; return x; } } catch (e) {} return null; }
+  function today() { const d = new Date(); const ms = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) + (app.clock || 0) * 86400000; return new Date(ms).toISOString().slice(0, 10); }
+  const s = () => app.s;
+  // Test tools (skip days) only on this Mac's local server or its Wi-Fi address, never for players
+  const TEST = /^(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname);
+
+  // ---------- small views ----------
+  function typeCard(t, sel, act, sub) {
+    const x = T[t];
+    return `<button class="typecard${sel ? ' sel' : ''}" style="--c:${x.color}" data-act="${act}" data-arg="${t}" aria-pressed="${sel}">
+      <img src="avatars/${t}.jpg" alt="">
+      <b>${x.short}</b><em>${x.power}</em><span>${sub || ('Shadow: ' + x.shadow.toLowerCase())}</span></button>`;
+  }
+  function bar(frac, color) { return `<div class="bar" style="--c:${color}"><i style="width:${Math.round(Math.max(0, Math.min(1, frac)) * 100)}%"></i></div>`; }
+  function helix(h) {
+    const w = 360, cols = ['#F26B4B', '#F5B841', '#3CC3A8', '#6F9BF2'];
+    let a = '', b = '', rungs = '';
+    for (let x = 0; x <= w; x += 4) { const t = (x / w) * Math.PI * 4; const y1 = h / 2 + Math.sin(t) * (h / 2 - 8), y2 = h / 2 - Math.sin(t) * (h / 2 - 8); a += (x ? 'L' : 'M') + x + ' ' + y1.toFixed(1); b += (x ? 'L' : 'M') + x + ' ' + y2.toFixed(1); }
+    for (let i = 0; i < 16; i++) { const x = 12 + i * ((w - 24) / 15), t = (x / w) * Math.PI * 4; const y1 = h / 2 + Math.sin(t) * (h / 2 - 8), y2 = h / 2 - Math.sin(t) * (h / 2 - 8); rungs += `<line x1="${x}" y1="${y1.toFixed(1)}" x2="${x}" y2="${y2.toFixed(1)}" stroke="${cols[i % 4]}" stroke-width="5" stroke-linecap="round"/>`; }
+    return `<svg class="helix" viewBox="0 0 ${w} ${h}" role="img" aria-label="A DNA helix with four coloured strands">${rungs}<path d="${a}" stroke="#F2F5F9" stroke-width="2.5" fill="none"/><path d="${b}" stroke="#8796AB" stroke-width="2.5" fill="none"/></svg>`;
+  }
+
+  // ---------- reading an uploaded Money DNA report (a PDF) on the phone ----------
+  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  function loadScript(src) { return new Promise((ok, no) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = () => no(new Error('load')); document.head.appendChild(el); }); }
+  async function pdfLib() {
+    if (!window.pdfjsLib) { await loadScript(PDFJS + 'pdf.min.js'); await loadScript(PDFJS + 'pdf.worker.min.js'); }
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+    return window.pdfjsLib;
+  }
+  // The report's score mix lists each type with its score out of 20, e.g. "Guardian 12/20 · 60%".
+  function parseReport(text) {
+    const t = text.replace(/\s+/g, ' ');
+    const NAMES = { D: 'Empire Builder', I: 'Trailblazer', S: 'Guardian', C: 'Architect' };
+    const scores = {};
+    F.TYPE_ORDER.forEach((k) => { const m = t.match(new RegExp(NAMES[k] + '\\s*(\\d{1,2})\\s*/\\s*20')); if (m) scores[k] = +m[1]; });
+    if (F.TYPE_ORDER.some((k) => scores[k] == null) || !/Money DNA/i.test(t)) return null;
+    const head = t.match(/Money DNA · ([DISC])\b/);
+    const ranked = F.TYPE_ORDER.slice().sort((x, y) => scores[y] - scores[x]);
+    const type = head ? head[1] : ranked[0];
+    const low = ranked.filter((k) => k !== type).pop();
+    const nm = t.match(/Prepared for ([^·]{1,40}?) ·/);
+    return { ok: true, type, low, scores, name: nm ? nm[1].trim() : '' };
+  }
+  async function readReport(file) {
+    const I = app.intake;
+    if (!file) return;
+    if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { I.report = { error: 'That isn’t a PDF. Upload the Money DNA report PDF from your email.' }; render(); return; }
+    I.report = { reading: true }; render();
+    try {
+      const lib = await pdfLib();
+      const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+      let text = '';
+      for (let i = 1; i <= Math.min(doc.numPages, 8); i++) { const pg = await doc.getPage(i); const c = await pg.getTextContent(); text += ' ' + c.items.map((x) => x.str).join(' '); }
+      I.report = parseReport(text) || { error: 'We couldn’t find your Money DNA scores in that file. Upload the full report PDF from your email.' };
+    } catch (e) {
+      I.report = { error: 'We couldn’t open that file. Try again, or pick your type yourself.' };
+    }
+    render();
+  }
+
+  // ---------- welcome ----------
+  function vWelcome() {
+    const live = s() && !s().over;
+    return `<div class="screen">
+      <div class="brand"><i></i>Money DNA</div>
+      <h1 class="hero">Four<span>Strands</span></h1>
+      <p class="tagline">Rags or riches: the money decisions that make or break you.</p>
+      ${helix(70)}
+      <div class="facts">
+        <div><b>Your real life</b>Start at your age, with your money situation.</div>
+        <div><b>3 weeks a day</b>A 2-minute daily game, until you turn 100.</div>
+        <div><b>Your Money DNA</b>Your strengths, and your shadow, in every choice.</div>
+        <div><b>One way to lose</b>Going broke. Build all four strands instead.</div>
+      </div>
+      <div class="grow"></div>
+      <div class="stack">
+        ${live ? `<button class="btn primary wide" data-act="go" data-arg="home">Continue your life</button>` : `<button class="btn primary wide" data-act="go" data-arg="consent">Start your life</button>`}
+        ${live ? `<button class="linkbtn" data-act="restart">Start a new life</button>` : ''}
+      </div>
+      <p class="fine">A game, not financial advice. Numbers are simplified. Adapted from <i>Money DNA</i> by Mack Comandante.</p>
+    </div>`;
+  }
+  function vConsent() {
+    return `<div class="screen">
+      <div class="top"><button class="iconbtn" data-act="go" data-arg="welcome" aria-label="Back">${ICON.back}</button><span class="kicker">Before we start</span><span style="width:44px"></span></div>
+      <h1 class="h1">A few questions about your life right now</h1>
+      <p class="lead">Your answers shape your game: your income, your family, your debts and your first dream. It takes about 2 minutes.</p>
+      <div class="panel">
+        <div class="lines">
+          <div><span>Money answers are ranges</span><b>Never exact</b></div>
+          <div><span>Where it’s kept</span><b>On this phone only</b></div>
+          <div><span>Shared with anyone</span><b>Never</b></div>
+          <div><span>Every question</span><b>Can be skipped</b></div>
+        </div>
+      </div>
+      <p class="fine">We use this only to shape your game. It is a game, not financial advice.</p>
+      <div class="grow"></div>
+      <button class="btn primary wide" data-act="startIntake">I agree, let’s go</button>
+    </div>`;
+  }
+
+  // ---------- intake ----------
+  function owedKinds() { const d = app.intake.a.debts || []; return Object.keys(F.DEBT_RANGES).filter((k) => d.indexOf(k) >= 0); }
+  function steps() { const a = app.intake.a; return F.INTAKE.filter((q) => !(q.id === 'low' && a._quiz) && !(q.id === 'debtAmt' && !owedKinds().length)); }
+  function vIntake() {
+    const I = app.intake;
+    if (I.quiz) return vQuiz();
+    const list = steps(), q = list[I.step], a = I.a;
+    const val = a[q.id];
+    const dots = list.map((_, i) => `<i class="${i <= I.step ? 'on' : ''}"></i>`).join('');
+    let body = '', ready = val != null && val !== '' && !(Array.isArray(val) && !val.length);
+    if (q.kind === 'text') body = `<label class="field"><input id="nm" maxlength="18" autocomplete="nickname" placeholder="Your nickname" value="${esc(val || '')}"></label>`;
+    if (q.kind === 'age') { const v = val || 30; ready = true; body = `<div class="agebox"><button class="iconbtn" data-act="age" data-arg="-1" aria-label="Younger">−</button><b>${v}</b><button class="iconbtn" data-act="age" data-arg="1" aria-label="Older">+</button></div><p class="fine" style="text-align:center">You have ${100 - v} years to play, about ${Math.round((Math.min(60, 100) - Math.min(v, 60)) * 52 / 3 / 30 + (100 - Math.max(v, 60)) * 12 / 3 / 30)} months of daily play.</p>`; }
+    let title = q.q, help = q.help;
+    if (q.kind === 'type' && I.pick) body = `<div class="typegrid">${F.TYPE_ORDER.map((t) => typeCard(t, val === t, 'pickType')).join('')}</div><button class="linkbtn" data-act="startQuiz">I don\u2019t know my type: take a 6-question quiz</button>`;
+    if (q.kind === 'type' && !I.pick) {
+      title = 'Upload your Money DNA report'; help = 'The PDF report from your email. We read your type and scores from it. The file stays on this phone.';
+      const rep = I.report;
+      if (rep && rep.ok) {
+        const ranked = F.TYPE_ORDER.slice().sort((x, y) => rep.scores[y] - rep.scores[x]);
+        body = `<div class="panel" style="--c:${T[rep.type].color}">
+            <div class="who" style="--c:${T[rep.type].color}"><img src="avatars/${rep.type}.jpg" alt=""><div><b>${esc(T[rep.type].name)}</b><span>Your Money DNA${rep.name ? ' \u00B7 ' + esc(rep.name) : ''}</span></div></div>
+            <div class="stack" style="gap:6px">${ranked.map((k) => `<div class="rscore" style="--c:${T[k].color}"><span>${T[k].short}</span>${bar(rep.scores[k] / 20, T[k].color)}<em>${rep.scores[k]}/20</em></div>`).join('')}</div>
+            <p class="fine">Your blind spot: <b style="color:var(--text)">${T[rep.low].short}</b>. Your choices will show your strengths and test this side of you.</p>
+          </div>
+          <button class="btn primary wide" data-act="reportUse">That\u2019s me, continue</button>
+          <button class="linkbtn" data-act="reportClear">Upload a different file</button>`;
+      } else {
+        body = `<label class="btn primary wide upload">${rep && rep.reading ? 'Reading your report\u2026' : 'Upload my report (PDF)'}<input id="reportFile" type="file" accept="application/pdf,.pdf" ${rep && rep.reading ? 'disabled' : ''}></label>
+          ${rep && rep.error ? `<p class="fine" style="color:var(--bad)">${esc(rep.error)}</p>` : ''}
+          <div class="panel">
+            <b>Don\u2019t have your report yet?</b>
+            <p class="fine">Take the free Money DNA quiz. Your full report arrives by email; come back and upload it here.</p>
+            <a class="btn wide" href="https://moneydna.exoasia.org" target="_blank" rel="noopener">Take the quiz at moneydna.exoasia.org</a>
+          </div>
+          <button class="linkbtn" data-act="pickInstead">I know my type: pick it myself</button>`;
+      }
+    }
+    if (q.kind === 'low') body = `<div class="typegrid">${F.TYPE_ORDER.filter((t) => t !== a.type).map((t) => typeCard(t, val === t, 'pickLow', T[t].strand[0].toUpperCase() + T[t].strand.slice(1) + ' strand')).join('')}</div>`;
+    if (q.kind === 'chips' || q.kind === 'multi') {
+      const multi = q.kind === 'multi';
+      const two = q.opts.length > 5;
+      body = `<div class="${two ? 'opts2' : 'opts1'}">${q.opts.map(([v, l]) => {
+        const sel = multi ? (val || []).indexOf(v) >= 0 : val === v;
+        return `<button class="pick${sel ? ' sel' : ''}" data-act="${multi ? 'toggle' : 'choose'}" data-arg="${v}" aria-pressed="${sel}"><span>${esc(l)}</span>${multi ? `<i class="tick">${sel ? ICON.check : ''}</i>` : ''}</button>`;
+      }).join('')}</div>`;
+    }
+    if (q.kind === 'amounts') {
+      const amt = val || {};
+      ready = owedKinds().every((k) => amt[k] != null);
+      body = `<div class="stack" style="gap:10px">${owedKinds().map((k) => { const r = F.DEBT_RANGES[k]; return `<div class="amtrow"><b>${esc(r.name)}</b><div class="amts" style="grid-template-columns:repeat(${r.opts.length},1fr)">${r.opts.map(([l], i) => `<button class="${amt[k] === i ? 'sel' : ''}" data-act="amt" data-arg="${k}:${i}" aria-pressed="${amt[k] === i}" aria-label="${esc(r.name)}: ${esc(l)}">${esc(l)}</button>`).join('')}</div></div>`; }).join('')}</div>`;
+    }
+    if (q.kind === 'dream') {
+      const ci = a.dreamCost;
+      ready = ci != null;
+      const size = ci != null ? F.dreamSizeFor(F.DREAM_COSTS[ci][1]) : null;
+      body = `<label class="field"><input id="dn" maxlength="60" placeholder="e.g. A sari-sari store for Nanay" value="${esc(a.dreamName || '')}" aria-label="Your dream"></label>
+        <div class="opts1">${F.DREAM_COSTS.map(([l], i) => `<button class="pick slim${ci === i ? ' sel' : ''}" data-act="dreamCost" data-arg="${i}" aria-pressed="${ci === i}"><span>${esc(l)}</span></button>`).join('')}</div>
+        ${size != null ? `<p class="fine" style="color:var(--amber)">A ${F.DREAM_SIZES[size].toLowerCase()} dream.${size > 0 ? ' You\u2019ll build up to it with smaller dreams first.' : ' It will be your first dream card.'}</p>` : ''}`;
+    }
+    if (q.kind === 'text') ready = true;
+    const auto = q.kind === 'chips' || q.kind === 'type';
+    return `<div class="screen">
+      <div class="top"><button class="iconbtn" data-act="intakeBack" aria-label="Back">${ICON.back}</button><div class="dots" style="flex:1">${dots}</div><span class="chip num">${I.step + 1}/${list.length}</span></div>
+      <div class="stack" style="gap:6px"><h1 class="h1">${esc(title)}</h1>${help ? `<p class="fine">${esc(help)}</p>` : ''}</div>
+      ${body}
+      <div class="grow"></div>
+      <div class="stack" style="gap:4px">
+        ${auto ? '' : `<button class="btn primary wide" data-act="intakeNext" ${ready ? '' : 'disabled'}>Next</button>`}
+        ${q.kind === 'type' || q.kind === 'low' ? '' : `<button class="linkbtn" data-act="skip">Skip, use a typical answer</button>`}
+      </div>
+    </div>`;
+  }
+  function vQuiz() {
+    const Q = app.intake.quiz, q = F.QUIZ[Q.i];
+    return `<div class="screen">
+      <div class="top"><button class="iconbtn" data-act="quizBack" aria-label="Back">${ICON.back}</button><div class="dots" style="flex:1">${F.QUIZ.map((_, i) => `<i class="${i <= Q.i ? 'on' : ''}"></i>`).join('')}</div><span class="chip num">${Q.i + 1}/${F.QUIZ.length}</span></div>
+      <span class="kicker">Mini quiz</span>
+      <h1 class="h1">${esc(q.q)}</h1>
+      <div class="opts1">${q.a.map(([t, l]) => `<button class="pick" data-act="quizAns" data-arg="${t}"><span>${esc(l)}</span></button>`).join('')}</div>
+      <div class="grow"></div>
+      <p class="fine">A short version of the Money DNA quiz. The full quiz gives a more accurate result.</p>
+    </div>`;
+  }
+
+  // ---------- mirror ----------
+  function vMirror() {
+    const g = s(), m = F.monthly(g), t = T[g.p.type], page = app.mirror || 0;
+    const head = `<div class="top"><span class="kicker">Your starting position</span><div class="dots" style="width:70px">${[0, 1, 2].map((i) => `<i class="${i <= page ? 'on' : ''}"></i>`).join('')}</div></div>`;
+    if (page === 0) {
+      return `<div class="screen">${head}
+        <div class="who" style="--c:${t.color}"><img src="avatars/${g.p.type}.jpg" alt=""><div><b>${esc(g.p.name)}, ${Math.floor(F.age(g))}</b><span>${t.short} · ${esc(F.fmtDate(g.date))}</span></div></div>
+        <h1 class="h1">This is your life, simplified</h1>
+        <div class="panel"><div class="lines">
+          <div><span>${g.retired ? 'Pension' : 'Income'} a month</span><b>${S(m.income)}</b></div>
+          ${m.passive > 0 ? `<div><span>Passive income (your assets)</span><b>${S(m.passive)}</b></div>` : ''}
+          <div><span>Living costs</span><b>−${S(m.living + m.kids + m.support + m.premiums)}</b></div>
+          <div><span>Debt payments</span><b>−${S(m.debtPay)}</b></div>
+          <div class="tot"><span>Left each month</span><b class="${m.flow >= 0 ? 'pos' : 'neg'}">${S(m.flow)}</b></div>
+          <div><span>Cash and safety fund</span><b>${S(g.cash + g.safety)}</b></div>
+          <div><span>Bad debt</span><b>${S(F.badDebt(g))}</b></div>
+          <div><span>Credit card limit</span><b>${S(g.cardLimit)}</b></div>
+        </div></div>
+        ${g.myDream ? `<p class="fine">Your dream: <b style="color:var(--text)">${esc(g.myDream.name)}</b>, ${S(g.myDream.cost)}, a ${F.DREAM_SIZES[g.myDream.size].toLowerCase()} dream.${g.dream && !g.dream.mine ? ` On the way, start with <b style="color:var(--text)">${esc(g.dream.name)}</b> (${S(g.dream.cost)}).` : ''}</p>`
+          : `<p class="fine">Your first dream: <b style="color:var(--text)">${esc(g.dream.name)}</b>, ${S(g.dream.cost)}.</p>`}
+        <div class="grow"></div>
+        <button class="btn primary wide" data-act="mirrorNext">See your four strands</button>
+      </div>`;
+    }
+    if (page === 1) {
+      const blind = F.blindStrand(g), mine = F.strengthStrand(g);
+      return `<div class="screen">${head}
+        <h1 class="h1">Your four strands today</h1>
+        <div class="ladder">${F.STRAND_ORDER.map((k) => {
+          const L = F.LEVELS[k], lv = g.levels[k], next = L[lv];
+          const tag = k === mine ? `<span class="tag strong" style="--c:${SK[k].color}">Your strength</span>` : k === blind ? '<span class="tag blind">Blind spot</span>' : '';
+          return `<div class="srow" style="--c:${SK[k].color}"><b>${SK[k].name}${tag}</b><em>Level ${lv} of ${L.length}</em><span>${next ? 'Next: ' + next.name + '. ' + next.need + '.' : 'Complete.'}</span></div>`;
+        }).join('')}</div>
+        <p class="fine">Your shadow is <b style="color:var(--text)">${t.shadow.toLowerCase()}</b>: ${t.shadowText.toLowerCase()} It will tempt you. Your move to master it: ${t.move.toLowerCase()}.</p>
+        <div class="grow"></div>
+        <button class="btn primary wide" data-act="mirrorNext">Set your money pockets</button>
+      </div>`;
+    }
+    return `<div class="screen">${head}
+      <h1 class="h1">Set your money pockets</h1>
+      <p class="fine">A share of every payday. Necessities is what\u2019s left.</p>
+      ${pocketRows()}
+      <div class="grow"></div>
+      <button class="btn primary wide" data-act="beginLife">Play your first day</button>
+    </div>`;
+  }
+  function pocketRows() {
+    const g = s(), m = F.monthly(g), pct = F.pocketPct(g);
+    const nec = Math.round((100 - pct) / 100 * m.income + m.passive), bills = m.essentials + m.debtPay;
+    return `<div class="list">
+      <div class="pocket nec"><b>${F.NECESSITIES.name}</b><span>${F.NECESSITIES.sub}</span><div class="stepper"><output>${100 - pct}%</output></div></div>
+      ${F.POCKETS.map((k) => `<div class="pocket"><b>${k.name}</b><span>${k.sub}</span><div class="stepper"><button data-act="pocket" data-arg="${k.key}:-5" aria-label="Less to ${k.name}">\u2212</button><output>${g.pockets[k.key] || 0}%</output><button data-act="pocket" data-arg="${k.key}:5" aria-label="More to ${k.name}">+</button></div></div>`).join('')}</div>
+      <div class="lines"><div><span>Necessities ${S(nec)} vs. bills ${S(bills)} a month</span><b class="${nec >= bills ? 'pos' : 'neg'}">${nec >= bills ? 'Enough' : 'Short'}</b></div></div>
+      ${nec < bills ? '<p class="fine" style="color:var(--amber)">Too little for bills: lower a pocket or cut costs.</p>' : ''}`;
+  }
+
+  // ---------- board: a ring of 20 spaces around the screen, money summary in the middle ----------
+  const SPACE_ICON = {
+    sweldo: '<circle cx="12" cy="12" r="8"/><path d="M9.5 8v8M9.5 8h3a2.5 2.5 0 0 1 0 5h-3M8 10.5h8M8 12.5h8"/>',
+    deal: '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>',
+    raket: '<rect x="4" y="8" width="16" height="11" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
+    merkado: '<path d="M5 19V11M10 19V6M15 19v-6M20 19V9"/>',
+    pamilya: '<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>',
+    gastos: '<path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    dream: '<path d="M12 4l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z"/>',
+    bayanihan: '<path d="M4 14l4-4 4 3 4-3 4 4"/><path d="M6 18h12"/>',
+    kindness: '<path d="M12 19s-7-4.4-7-9.5A4 4 0 0 1 12 7a4 4 0 0 1 7 2.5C19 14.6 12 19 12 19z"/>',
+    life: '<path d="M12 20v-8"/><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>',
+    buhay: '<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 17 15z"/><path d="M10 17l-1 3M14 17l-1 3"/>',
+    seguro: '<path d="M12 4l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V7z"/>',
+    checkin: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 12l2 2 4-4"/>',
+  };
+  // ring position (row, col) for each of the 20 spaces, clockwise from the top-left corner
+  const RING = (() => { const p = []; for (let c = 1; c <= 5; c++) p.push([1, c]); for (let r = 2; r <= 7; r++) p.push([r, 5]); for (let c = 4; c >= 1; c--) p.push([7, c]); for (let r = 6; r >= 2; r--) p.push([r, 1]); return p; })();
+  const CORNERS = [0, 4, 10, 14];
+  // time left until new turns unlock at midnight
+  function untilMidnight() {
+    const now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const m = Math.max(1, Math.ceil((next - now) / 60000));
+    return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + 'm';
+  }
+  setInterval(() => { const el = document.getElementById('cnext'); if (el) el.textContent = '\u00B7 back in ' + untilMidnight(); }, 30000);
+  // pips on a 3x3 grid for each face
+  const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  function dieFace(n) { return Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].indexOf(i) >= 0 ? 'on' : ''}"></i>`).join(''); }
+  // cube rotation that brings each face to the front
+  const FACE_ROT = { 1: [0, 0], 6: [0, 180], 3: [0, -90], 4: [0, 90], 2: [-90, 0], 5: [90, 0] };
+  function die3d(a) {
+    const faces = [1, 2, 3, 4, 5, 6].map((n) => `<div class="face f${n}">${dieFace(n)}</div>`).join('');
+    return `<div class="die3d${a.justLanded ? ' land' : ''}" role="img" aria-label="${a.rolling ? 'Rolling the die' : a.die ? 'Die showing ' + a.die : 'Die'}"><div class="cube" style="transform:rotateX(${a.rx || 0}deg) rotateY(${a.ry || 0}deg) rotateZ(${a.rz || 0}deg)">${faces}</div></div>`;
+  }
+  // the player's game piece: a glossy pawn in their type's colour
+  function pawn(color) {
+    return `<svg class="tok" viewBox="0 0 24 32" role="img" aria-label="You are here"><ellipse cx="12" cy="29.5" rx="8" ry="2.2" fill="rgba(0,0,0,.35)"/>
+      <path d="M12 3.5a4.6 4.6 0 0 1 2.6 8.4c1.6 1.2 2.4 2.6 2.4 4.1 0 1.2-.6 2.2-1.4 2.9l2.4 6.3c.3.8-.3 1.8-1.2 1.8H7.2c-.9 0-1.5-1-1.2-1.8l2.4-6.3C7.6 18.2 7 17.2 7 16c0-1.5.8-2.9 2.4-4.1A4.6 4.6 0 0 1 12 3.5z" fill="${color}" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+      <ellipse cx="10.4" cy="7" rx="1.4" ry="2" fill="#fff" opacity=".55"/><path d="M9.2 19.5h5.6" stroke="#0B1424" stroke-width="1" opacity=".35"/></svg>`;
+  }
+  function vBoard() {
+    const g = s(), t = T[g.p.type], m = F.monthly(g), d = g.day, u = app.ui;
+    const anim = u.anim, pos = anim ? anim.pos : (g.pos || 0);
+    const cells = F.BOARD.map((k, i) => {
+      const sp = F.SPACES[k], [r, c] = RING[i], here = i === pos;
+      // each space is a printed tile: a coloured band with the icon, the name in ink below; corners are fully coloured
+      return `<div class="sp${CORNERS.indexOf(i) >= 0 ? ' corner' : ''}${sp.strand === 'joy' ? ' lightc' : ''}${here ? ' here' : ''}" style="grid-area:${r}/${c};--sc:${SK[sp.strand].color}">
+        <div class="band"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SPACE_ICON[k]}</svg></div>
+        <span class="sl">${sp.name}</span>${i === 0 ? '<i class="startarrow" aria-hidden="true">Start \u2192</i>' : ''}${here ? pawn(t.color) : ''}</div>`;
+    }).join('');
+    const left = F.turnsLeft(g), dcost = F.dreamCost(g);
+    const warn = g.nearBroke || F.badDebt(g) > 3 * Math.max(1, m.income) || (g.cash <= 0 && m.flow < 0);
+    const pips = d ? Array.from({ length: d.base + d.boughtTurns }, (_, i) => `<i class="${i < d.played ? (i >= d.base ? 'x' : 'on') : ''}"></i>`).join('') : '';
+    let action;
+    if (anim) action = `<div class="dierow"><div class="diewrap">${die3d(Object.assign({}, anim, { rx: anim.rx, ry: anim.ry, rz: anim.rz }))}<span class="dieshadow"></span></div><span class="fine" aria-live="polite">${anim.rolling ? 'Rolling\u2026' : 'You rolled ' + anim.die}</span></div>`;
+    else if (g.dayReward && !g.card) action = `<button class="btn primary wide" data-act="finishDay">Finish today</button>`;
+    else if (g.card) action = `<button class="btn primary wide" data-act="play">Back to this week\u2019s card</button>`;
+    else if (left > 0) { const dr = dieRot(); action = `<div class="dierow"><div class="diewrap grab" id="dieGrab" role="button" tabindex="0" aria-label="Roll the die: swipe it, or press Enter">${die3d({ rx: dr.x, ry: dr.y, rz: dr.z, die: 0, rolling: false })}<span class="dieshadow"></span></div><div class="rollhint"><b>Swipe the die</b><span>${left} ${left === 1 ? 'roll' : 'rolls'} left today</span></div></div>`; }
+    else {
+      // done for today: say when new turns come, and why the extra buttons are off
+      const dd = g.day || { extraCards: 0, boughtTurns: 0 };
+      const cardWhy = g.coins < 1 ? 'Need 1 coin' : dd.extraCards >= 3 ? 'Used 3/3' : 'Extra card';
+      const turnWhy = g.coins < 3 ? 'Need 3 coins' : dd.boughtTurns >= 3 ? 'Used 3/3' : 'Extra week';
+      action = `<div class="stack" style="gap:6px">
+        <div class="cdone">Done today <span class="cnext" id="cnext">\u00B7 back in ${untilMidnight()}</span></div>
+        <div class="grid2" style="gap:6px">
+          <button class="xbtn" data-act="extraCard" ${F.canExtraCard(g) ? '' : 'disabled'}><b>+Card \u00B7 1</b><span>${cardWhy}</span></button>
+          <button class="xbtn" data-act="buyTurn" ${F.canBuyTurn(g) ? '' : 'disabled'}><b>+Turn \u00B7 3</b><span>${turnWhy}</span></button>
+        </div>
+        ${TEST ? `<button class="linkbtn testday" data-act="clock" data-arg="1">Next day (test)</button>` : ''}
+      </div>`;
+    }
+    return `<div class="screen" style="gap:8px">
+      <div class="top"><div class="brand"><i></i>Four Strands</div><div class="row"><span class="chip flame" title="Daily streak">${ICON.flame}${g.streak}</span><button class="chip" data-act="sheet" data-arg="coins" aria-label="Coins">${ICON.coin}${g.coins}</button><button class="iconbtn" data-act="sheet" data-arg="menu" aria-label="Menu">${ICON.menu}</button></div></div>
+      <div class="board">${cells}
+        <div class="center" style="--pc:${t.color}">
+          <div class="cwho"><img src="avatars/${g.p.type}.jpg" alt=""><div><b>${esc(g.p.name)}, ${Math.floor(F.age(g))}</b><span>${esc(F.fmtDate(g.date))}</span></div></div>
+          <div class="pips" aria-label="${d ? d.played : 0} turns played today">${pips}</div>
+          <div class="cnw"><span>Net worth</span><b>${S(F.netWorth(g))}</b></div>
+          ${warn ? `<button class="cwarn" data-act="sheet" data-arg="money"><b>Debt spiral</b>${F.inGrace(g) ? 'Family covers you until ' + esc(F.fmtDate(F.graceUntil(g))) : 'Tap to pay down debt'}</button>` : `<div class="clines">
+            <div><span>Cash</span><b>${S(g.cash)}</b></div>
+            <div><span>Emergency</span><b>${S(g.safety)}</b></div>
+            <div><span>Left/month</span><b class="${m.flow >= 0 ? 'pos' : 'neg'}">${S(m.flow)}</b></div>
+            <div><span>Bad debt</span><b>${S(F.badDebt(g))}</b></div></div>`}
+          <button class="cstr" data-act="sheet" data-arg="strands" aria-label="Your four strands">${F.STRAND_ORDER.map((k) => {
+            const L = F.LEVELS[k], lv = g.levels[k], pr = lv >= L.length ? { frac: 1 } : F.progress(g, k, lv);
+            return `<div style="--c:${SK[k].color}"><span>${SK[k].name}</span><em>${lv}/${L.length}</em>${bar(pr.frac, SK[k].color)}</div>`;
+          }).join('')}</button>
+          ${(() => { const ng = nextGoal(g); return ng ? `<button class="cdream cgoal" data-act="sheet" data-arg="${ng.sheet}" style="--c:${ng.color}"><span><b>${ng.ready ? '' : 'Next goal \u00B7 '}${esc(ng.title)}</b><em>${esc(ng.text)}</em></span>${bar(ng.frac, ng.color)}</button>` : ''; })()}
+          <div class="grow"></div>
+          ${action}
+          <div class="cnav">
+            <button data-act="sheet" data-arg="money" aria-label="Money">${ICON.money}</button>
+            <button data-act="sheet" data-arg="pockets" aria-label="Pockets">${ICON.pockets}</button>
+            <button data-act="sheet" data-arg="strands" aria-label="Strands">${ICON.strands}</button>
+            <button data-act="sheet" data-arg="coins" aria-label="Coins">${ICON.coin}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ---------- turn ----------
+  // the week's card rises over the board
+  function vTurn() {
+    const body = turnBody();
+    if (!body) return vBoard();
+    const k = s().card ? strandColor(s().card.strand) : strandColor(app.ui.lastStrand);
+    return vBoard() + `<div class="back${app.ui.cardAnim ? ' anim' : ''}"><div class="sheet" role="dialog" aria-modal="true" aria-label="This week" style="--k:${k}">${body}</div></div>`;
+  }
+  function turnBody() {
+    const g = s(), u = app.ui, c = g.card, sum = u.sum;
+    const chips = [];
+    if (u.roll) chips.push(`<span class="chip" style="color:${SK[F.SPACES[u.space].strand].color}">Rolled ${u.roll} \u00B7 ${F.SPACES[u.space].name}</span>`);
+    if (sum) {
+      chips.push(`<span class="chip">${esc(F.fmtDate(g.date))} · age ${Math.floor(F.age(g))}</span>`);
+      if (sum.paid) chips.push(`<span class="chip pos">Paid +${S(sum.paid)}</span>`);
+      if (sum.passive) chips.push(`<span class="chip pos">Assets +${S(sum.passive)}</span>`);
+      if (sum.settled) chips.push(`<span class="chip neg">Bills −${S(sum.bills)}</span>`);
+    }
+    // level-ups at the start of a week show as small chips here, and in full on the result screen
+    (u.news || []).forEach((n) => { if (n.kind === 'bailout') chips.push(`<span class="chip neg">Family covered ${S(n.amt)}</span>`); if (n.kind === 'graceover') chips.push(`<span class="chip neg">Safety net ended</span>`); });
+    (u.news || []).forEach((n) => { if (n.kind === 'level') chips.push(`<span class="chip" style="color:${SK[n.strand].color}">${n.code} reached</span>`); });
+    const news = '';
+    if (u.result) {
+      const r = u.result, more = F.turnsLeft(g) > 0 && !g.over;
+      return `<div class="tbody">
+        <div class="weekbar">${chips.join('')}</div>
+        <div class="result ${r.tone || ''}"><span class="kicker" style="--k:${strandColor(u.lastStrand)}">${esc(u.lastTitle)}</span>${esc(r.msg)}${r.blind ? `<span class="fine" style="color:var(--violet)">Blind-spot play: +1 coin, and you grew a little.</span>` : ''}</div>
+        ${(r.news || []).map(newsBox).join('')}
+        <div class="lines" style="padding:0 2px"><div><span>Cash</span><b>${S(g.cash)}</b></div><div><span>Net worth</span><b>${S(F.netWorth(g))}</b></div></div>
+        ${g.over ? `<button class="btn primary wide" data-act="go" data-arg="over">See how your life ended</button>`
+          : more ? `<div class="grid2"><button class="btn" data-act="go" data-arg="home">Board</button><button class="btn primary" data-act="play">Next roll</button></div>`
+          : g.day && g.day.done && !g.dayReward ? `<button class="btn primary wide" data-act="go" data-arg="home">Back to board</button>`
+          : `<button class="btn primary wide" data-act="finishDay">Finish today</button>`}
+      </div>`;
+    }
+    if (!c) return '';
+    const k = strandColor(c.strand);
+    const deal = c.deal ? `<div class="deal"><div><span>Cost</span><b>${S(c.deal.cost)}</b></div><div><span>Income</span><b>${S(c.deal.inc)}/mo</b></div><div><span>Kind</span><b>${F.CAT_NAME[c.deal.cat]}</b></div></div>` : '';
+    return `<div class="tbody">
+      <div class="weekbar">${chips.join('')}</div>
+      ${news}
+      <div class="cardv" style="--k:${k}">
+        <span class="kicker" style="--k:${k}">${esc(KIND_LABEL[c.kind] || '')}</span>
+        <h2>${esc(c.title)}</h2>
+        ${c.body ? `<p>${esc(c.body)}</p>` : ''}
+        ${deal}
+      </div>
+      <div class="opts" style="--k:${k}">${c.choices.map((o) => {
+        // choices carry no labels: players find their strength, shadow and blind spot by playing
+        return `<button class="opt" data-act="choose" data-arg="${esc(o.id)}" ${o.disabled ? 'disabled' : ''}><b>${esc(o.label)}</b>${o.sub || o.why ? `<span>${esc(o.disabled ? o.why : o.sub)}</span>` : ''}</button>`;
+      }).join('')}</div>
+    </div>`;
+  }
+  function newsBox(n) {
+    if (n.kind === 'level') return `<div class="news" style="--c:${SK[n.strand].color}"><b>${n.code} reached: ${esc(n.name)}</b>Your ${SK[n.strand].name} strand grew. +3 coins.</div>`;
+    if (n.kind === 'blind') return `<div class="news" style="--c:#A98BF0"><b>You’ve grown past your Money DNA</b>Your blind-spot strand is complete. +25 coins.</div>`;
+    if (n.kind === 'mastered') return `<div class="news" style="--c:#A98BF0"><b>Shadow mastered</b>Its echoes now hit half as hard. +10 coins.</div>`;
+    if (n.kind === 'dream') return `<div class="news"><b>Dream come true</b>${esc(n.text)}</div>`;
+    if (n.kind === 'bailout') return `<div class="news" style="--c:var(--bad)"><b>Your family covered ${S(n.amt)}</b>You couldn\u2019t pay, so they did. You now owe them ${S(n.owe)}. Their help ends ${esc(F.fmtDate(n.until))}.</div>`;
+    if (n.kind === 'graceover') return `<div class="news" style="--c:var(--bad)"><b>The family safety net has ended</b>From now on, if you can\u2019t pay, you can go broke.</div>`;
+    return `<div class="news"><b>Life changes</b>${esc(n.text)}</div>`;
+  }
+
+  // ---------- while you were away: today's real headlines, then any missed days ----------
+  function vAway() {
+    const pages = app.awayPages || [];
+    const i = Math.min(app.ui.awayIdx || 0, pages.length - 1), pg = pages[i];
+    if (!pg) return vBoard();
+    const last = i >= pages.length - 1;
+    const head = `<div class="between"><span class="kicker">While you were away</span>${pages.length > 1 ? `<span class="chip num">${i + 1} of ${pages.length}</span>` : ''}</div>`;
+    const nav = `<div class="grid2">${i > 0 ? `<button class="btn" data-act="awayPrev">Back</button>` : '<span></span>'}${last ? `<button class="btn primary" data-act="awayDone">Back to my life</button>` : `<button class="btn primary" data-act="awayNext">Next</button>`}</div>`;
+    if (pg.type === 'news') {
+      const n = pg.n, up = n.amt > 0, down = n.amt < 0;
+      const money = !n.amt ? 'No change for you' : (up ? '+' : '−') + S(Math.abs(n.amt)) + (n.valueOnly ? ' in asset value' : up ? ' to your cash' : ' from your money');
+      return `<div class="screen">${head}
+        <span class="fine">In the news${n.source ? ' · Source: ' + esc(n.source) : ''}</span>
+        <h1 class="h1" style="font-size:22px">${esc(n.headline)}</h1>
+        ${n.summary ? `<p class="lead" style="font-size:14px">${esc(n.summary)}</p>` : ''}
+        <div class="panel" style="border-color:${up ? 'var(--good)' : down ? 'var(--bad)' : 'var(--line)'}">
+          <span class="kicker" style="--k:${up ? 'var(--good)' : down ? 'var(--bad)' : 'var(--muted)'}">What it means for you${n.who && n.who !== 'all' ? ' · ' + esc(F.WHO_LABEL[n.who] || '') : ''}</span>
+          <p class="lead" style="font-size:14.5px;color:var(--text)">${esc(n.story)}</p>
+          <b style="font-family:var(--display);font-size:24px;color:${up ? 'var(--good)' : down ? 'var(--bad)' : 'var(--muted)'}">${money}</b>
+        </div>
+        <div class="grow"></div>
+        <p class="fine">Real headlines, simplified effects in your game. Not financial advice.</p>
+        ${nav}
+      </div>`;
+    }
+    const r = pg.rep, ch = r.endNW - r.startNW;
+    const stage = { busy: 'Busy', drifting: 'Drifting', neglect: 'Neglect' }[r.stage];
+    return `<div class="screen">${head}
+      <h1 class="h1">${r.days} ${r.days > 1 ? 'days' : 'day'} passed without you</h1>
+      <p class="lead">Life didn’t wait: ${r.days * 3} ${s().retired ? 'months' : 'weeks'} ran on autopilot. Your pockets and bills ran as set.${r.covered ? ` ${r.covered} rest ${r.covered > 1 ? 'passes' : 'pass'} protected you.` : ''}</p>
+      <div class="panel"><div class="lines"><div><span>Stage reached</span><b>${stage}</b></div><div><span>Net worth change</span><b class="${ch >= 0 ? 'pos' : 'neg'}">${ch >= 0 ? '+' : ''}${S(ch)}</b></div></div></div>
+      <div class="storyl">${(r.lines.length ? r.lines : ['Nothing major went wrong. You were lucky.']).slice(-5).map((l) => `<div>${esc(l)}</div>`).join('')}</div>
+      ${r.comeback ? `<p class="fine" style="color:var(--amber)">Welcome back: +2 coins, and your next card is a lucky deal.</p>` : ''}
+      <div class="grow"></div>
+      ${nav}
+    </div>`;
+  }
+
+  // ---------- hooks that pull players forward ----------
+  // The closest next achievement: a ready dream first, then the strand level nearest to done, then the dream.
+  function nextGoal(g) {
+    const dcost = F.dreamCost(g);
+    if (g.dream && g.pots.dream >= dcost) return { title: 'Dream ready! Tap to make it real', text: g.dream.name, frac: 1, color: '#F5B841', sheet: 'dream', ready: true };
+    let best = null;
+    F.STRAND_ORDER.forEach((k) => {
+      const L = F.LEVELS[k], lv = g.levels[k], last = k === 'protect' ? L.length - 1 : L.length;
+      if (lv >= last) return;
+      const pr = F.progress(g, k, lv);
+      if (!best || pr.frac > best.frac) best = { title: L[lv].code + ' ' + L[lv].name, text: pr.text, frac: pr.frac, color: SK[k].color, sheet: 'strands' };
+    });
+    const dreamFrac = g.dream ? g.pots.dream / Math.max(1, dcost) : 0;
+    if (g.dream && (!best || dreamFrac > best.frac)) return { title: g.dream.name, text: S(g.pots.dream) + ' of ' + S(dcost) + ' saved', frac: dreamFrac, color: '#F5B841', sheet: 'dream' };
+    return best;
+  }
+  // One line about what tomorrow holds: an echo coming back, a calendar moment, a near goal, or the news.
+  const ECHO_TEASE = {
+    lemon: (e) => 'Something feels off about your ' + e.name.replace(/ \(.*\)$/, '') + '…',
+    tip: () => 'Your hot stock tip is about to move. Up, or down?',
+    cousin: () => 'Your cousin promised news about the money you lent.',
+    askagain: () => 'Family may come asking again.',
+    idle: () => 'The money you left in the bank is waiting on your decision.',
+    waited: () => 'That deal you were researching won’t wait forever.',
+    nocushion: () => 'Your all-in move left you with no cushion.',
+    repaid: () => 'A payment plan is about to pay out.',
+    trip: () => 'The card bill from your trip is on its way.',
+  };
+  function teaser() {
+    const g = s(); if (!g || g.over) return '';
+    const horizon = g.date + (g.retired ? 92 : 21) * 86400000;
+    const e = (g.echoes || []).filter((x) => x.due <= horizon + 21 * 86400000).sort((a, b) => a.due - b.due)[0];
+    if (e && ECHO_TEASE[e.kind]) return ECHO_TEASE[e.kind](e);
+    const soon = (m, d) => { for (let t = g.date; t <= horizon; t += 86400000) { const x = new Date(t); if (x.getUTCMonth() === m && x.getUTCDate() === d) return true; } return false; };
+    if (!g.retired && soon(11, 15)) return 'Your 13th month pay is almost here. What will you do with it?';
+    if (soon(11, 24)) return 'The Christmas reunion is coming. Everyone will need something.';
+    if (soon(5, 8) && g.kids.some((k) => !k.left)) return 'School opens soon. Enrollment, uniforms and supplies.';
+    const ng = nextGoal(g);
+    if (ng && ng.frac >= 0.6 && !ng.ready) return 'You’re close to ' + ng.title + '.';
+    return 'Three new weeks of your life, and fresh headlines from the news.';
+  }
+  // A shareable image of your streak or legacy, drawn on a canvas (1080 x 1350, a 4:5 post).
+  async function shareImage(kind) {
+    const g = s(), cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350;
+    const x = cv.getContext('2d');
+    try { await document.fonts.ready; } catch (e) {}
+    const bg = x.createLinearGradient(0, 0, 0, 1350); bg.addColorStop(0, '#1B2B45'); bg.addColorStop(1, '#0B1424');
+    x.fillStyle = bg; x.fillRect(0, 0, 1080, 1350);
+    const strip = ['#F26B4B', '#F5B841', '#3CC3A8', '#6F9BF2']; strip.forEach((c, i) => { x.fillStyle = c; x.fillRect(i * 270, 0, 270, 14); });
+    x.textAlign = 'center';
+    x.fillStyle = '#C9D4E3'; x.font = '700 40px "DM Sans", sans-serif'; x.fillText('FOUR STRANDS · THE MONEY DNA GAME', 540, 120);
+    const name = g ? g.p.name : 'Player', type = g ? T[g.p.type].short : '';
+    if (kind === 'legacy' && g && g.legacy) {
+      x.fillStyle = '#F5B841'; x.font = '800 64px "Bricolage Grotesque", sans-serif'; x.fillText('Happy 100th birthday', 540, 300);
+      x.fillStyle = '#F2F5F9'; x.font = '800 140px "Bricolage Grotesque", sans-serif'; x.fillText(S(g.legacy.heirs), 540, 520);
+      x.fillStyle = '#C9D4E3'; x.font = '600 46px "DM Sans", sans-serif'; x.fillText('passed on to my heirs', 540, 600);
+      x.font = '600 44px "DM Sans", sans-serif';
+      F.lifeStory(g).slice(0, 4).forEach((l, i) => { x.fillText(l, 540, 760 + i * 70); });
+    } else {
+      const n = (app.streakShow && app.streakShow.streak) || (g ? g.streak : 1);
+      const fl = new Path2D('M60 12C70 32 98 44 98 80C98 104 81 122 60 122S22 104 22 80C22 66 28 55 36 48C37 56 40 61 45 63C44 44 49 28 60 12Z');
+      x.save(); x.translate(540 - 180, 170); x.scale(3, 3);
+      const fg = x.createLinearGradient(0, 122, 0, 12); fg.addColorStop(0, '#F26B4B'); fg.addColorStop(1, '#F5B841');
+      x.lineWidth = 9; x.strokeStyle = '#FBE3B0'; x.lineJoin = 'round'; x.stroke(fl); x.fillStyle = fg; x.fill(fl);
+      x.fillStyle = '#FFF3CF'; x.fill(new Path2D('M60 70C66 80 74 87 74 98A14 14 0 0 1 46 98C46 87 54 80 60 70Z'));
+      x.restore();
+      const ng = x.createLinearGradient(0, 600, 0, 860); ng.addColorStop(0, '#F26B4B'); ng.addColorStop(1, '#F5B841');
+      x.fillStyle = ng; x.font = '800 300px "Bricolage Grotesque", sans-serif'; x.fillText(String(n), 540, 850);
+      x.fillStyle = '#F2894B'; x.font = '800 80px "Bricolage Grotesque", sans-serif'; x.fillText('day streak', 540, 950);
+      x.fillStyle = '#C9D4E3'; x.font = '600 44px "DM Sans", sans-serif'; x.fillText('Showing up for my money, one day at a time.', 540, 1040);
+    }
+    x.fillStyle = '#F2F5F9'; x.font = '800 54px "Bricolage Grotesque", sans-serif'; x.fillText(name + (type ? ' · ' + type : ''), 540, 1180);
+    x.fillStyle = '#F5B841'; x.font = '700 40px "DM Sans", sans-serif'; x.fillText('Find your Money DNA: moneydna.exoasia.org', 540, 1260);
+    return cv.toDataURL('image/png');
+  }
+  async function saveShareImage() {
+    const url = app.ui.shareImg; if (!url) return;
+    const name = 'four-strands-' + (app.ui.shareKind || 'streak') + '.png';
+    try {
+      const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+      if (dl) { const blob = await (await fetch(url)).blob(); await dl.save({ filename: name, data: blob }); toast('<b>Image saved</b>Post it anywhere.'); render(); return; }
+    } catch (e) { if (e && e.code === 'declined') return; }
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+  // A daily reminder for your calendar at this time of day: Google Calendar works everywhere; the .ics file works on the local version.
+  function reminderTimes() {
+    const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, now.getHours(), now.getMinutes() < 30 ? 30 : 0);
+    if (now.getMinutes() >= 30) t.setHours(t.getHours() + 1);
+    const end = new Date(t.getTime() + 10 * 60000);
+    const z = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    return { start: t, gs: z(t), ge: z(end) };
+  }
+  function googleReminderUrl() {
+    const r = reminderTimes();
+    const q = new URLSearchParams({ action: 'TEMPLATE', text: 'Four Strands: play today’s 3 weeks', details: 'Keep your Money DNA streak alive. 2 minutes a day.', dates: r.gs + '/' + r.ge, recur: 'RRULE:FREQ=DAILY' });
+    return 'https://calendar.google.com/calendar/render?' + q.toString();
+  }
+  function icsReminder() {
+    const r = reminderTimes();
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Exoasia//Four Strands//EN', 'BEGIN:VEVENT', 'UID:four-strands-daily@exoasia', 'DTSTAMP:' + r.gs, 'DTSTART:' + r.gs, 'DTEND:' + r.ge, 'RRULE:FREQ=DAILY', 'SUMMARY:Four Strands: play today’s 3 weeks', 'DESCRIPTION:Keep your Money DNA streak alive. 2 minutes a day.', 'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Four Strands', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = 'four-strands-reminder.ics'; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // ---------- the day's recap: what today's weeks did to your money ----------
+  function dayLog(g) {
+    if (!app.dayLog || app.dayLog.date !== today()) app.dayLog = { date: today(), from: g.date, nw0: F.netWorth(g), cash0: g.cash, coins0: g.coins, spent: 0, bought: 0, weeks: 0, cards: [], levels: [], shadows: 0 };
+  }
+  function noteChoice(g, c, opt, delta, news) {
+    dayLog(g);
+    const L = app.dayLog;
+    L.cards.push({ title: c.title, delta: Math.round(delta) });
+    if (opt && opt.tag === 'shadow') L.shadows++;
+    news.filter((n) => n.kind === 'level').forEach((n) => { if (L.levels.indexOf(n.code + ' ' + n.name) < 0) L.levels.push(n.code + ' ' + n.name); });
+  }
+  function makeRecap(g) {
+    const L = app.dayLog && app.dayLog.date === today() ? app.dayLog : { from: g.date, nw0: F.netWorth(g), cash0: g.cash, weeks: 0, cards: [], levels: [], shadows: 0 };
+    const sorted = L.cards.slice().sort((a, b) => b.delta - a.delta);
+    const best = sorted[0] && sorted[0].delta > 0 ? sorted[0] : null, worst = sorted.length && sorted[sorted.length - 1].delta < 0 ? sorted[sorted.length - 1] : null;
+    const coins = L.coins0 == null ? 2 : Math.max(0, g.coins - L.coins0 + (L.spent || 0) - (L.bought || 0));
+    return { coins, day: g.day ? g.day.n : 1, from: L.from, to: g.date, weeks: L.weeks, monthly: g.retired, nw: F.netWorth(g) - L.nw0, cash: g.cash - L.cash0, levels: L.levels, shadows: L.shadows, cards: L.cards.length, best, worst, shadowName: T[g.p.type].shadow.toLowerCase() };
+  }
+  // a congratulatory line for the streak, shown big on the day recap
+  function cheer(n) {
+    if (n === 1) return 'Great start! Your streak begins today.';
+    if (n % 7 === 0) return n === 7 ? 'A full week! You\u2019re building a real habit.' : (n / 7) + ' weeks strong. Amazing!';
+    if (n % 30 === 0) return 'A whole month of showing up. Incredible!';
+    if (n < 7) return 'Way to show up for your money. Keep it going!';
+    return 'You keep showing up, and it shows. Congratulations!';
+  }
+  function demoRecap() {
+    const d = Date.parse(today() + 'T00:00:00Z');
+    return { coins: 2, streak: 5, day: 5, from: d, to: d + 21 * 86400000, weeks: 3, nw: 18400, cash: -6200, levels: ['P1 Out of debt'], shadows: 1, cards: 3, best: { title: 'A bonus at work', delta: 32000 }, worst: { title: 'Your motorbike breaks down', delta: -9600 }, shadowName: 'rescuer', preview: true };
+  }
+  function vDayEnd() {
+    const r = app.recap; if (!r) return vBoard();
+    const sign = (n) => (n > 0 ? '+' : n < 0 ? '\u2212' : '') + S(Math.abs(n));
+    const cls = (n) => (n > 0 ? 'pos' : n < 0 ? 'neg' : '');
+    return `<div class="screen dayend">
+      <span class="kicker">Day ${r.day} complete</span>
+      <h1 class="h1">Today in your life</h1>
+      <p class="lead">${esc(F.fmtDate(r.from))} \u2192 ${esc(F.fmtDate(r.to))} \u00B7 ${r.weeks} ${r.monthly ? (r.weeks === 1 ? 'month' : 'months') : (r.weeks === 1 ? 'week' : 'weeks')} lived</p>
+      ${(() => { const n = r.streak || (app.streakShow && app.streakShow.streak) || 1; return `<div class="congrats" role="status">${ICON.flame}<div><b>${n}-day streak!</b><span>${esc(cheer(n))}</span></div><em class="coinbadge">${ICON.coin}+${r.coins || 0}<small>coins</small></em></div>`; })()}
+      <div class="recapgrid">
+        <div><span>Net worth</span><b class="${cls(r.nw)}">${sign(r.nw)}</b></div>
+        <div><span>Cash</span><b class="${cls(r.cash)}">${sign(r.cash)}</b></div>
+        <div><span>Levels reached</span><b>${r.levels.length}</b>${r.levels.length ? `<i>${esc(r.levels.join(', '))}</i>` : ''}</div>
+        <div><span>Shadow choices</span><b class="${r.shadows ? 'neg' : 'pos'}">${r.shadows}</b><i class="${r.shadows ? 'warn' : ''}">${r.shadows ? 'Its echoes may come back' : 'Well played'}</i></div>
+      </div>
+      <div class="moments">
+        ${r.best ? `<div class="pos"><span>Best moment</span><b>${esc(r.best.title)}</b><em>${sign(r.best.delta)}</em></div>` : ''}
+        ${r.worst ? `<div class="neg"><span>Toughest moment</span><b>${esc(r.worst.title)}</b><em>${sign(r.worst.delta)}</em></div>` : ''}
+        ${!r.best && !r.worst ? '<div><span>A steady day</span><b>Nothing big moved your money today.</b></div>' : ''}
+      </div>
+      <div class="grow"></div>
+      <div class="remind">${ICON.bell}<span>Add a reminder on your phone so you don\u2019t miss a streak! <b>See you tomorrow!</b></span><button class="btn small" data-act="sheet" data-arg="remind">Set reminder</button></div>
+      <div class="hermes row2"><p>Stay on track of your finances.</p><a class="btn small" href="https://hermes.exoasia.org" target="_blank" rel="noopener">Go to hermes.exoasia.org</a></div>
+      ${r.preview ? '<button class="btn primary wide" data-act="recapDone">Close preview</button>' : '<button class="btn primary wide" data-act="toStreak">See your streak</button>'}
+    </div>`;
+  }
+
+  // ---------- streak celebration at the end of each day ----------
+  const STREAK_LINES = [
+    [1, 'Your streak has started. Come back tomorrow to keep it alive.'],
+    [2, 'Two days in a row. Habits start like this.'],
+    [3, 'Three days strong! A bonus side gig is on its way.'],
+    [7, 'A full week! You earned a rest pass.'],
+    [14, 'Two weeks of showing up for your money.'],
+    [30, 'A whole month! A lucky deal is yours.'],
+    [100, 'One hundred days. Your dream just got 20% cheaper.'],
+    [365, 'A full year. You planted a legacy seed.'],
+  ];
+  function streakLine(n) { let t = STREAK_LINES[0][1]; STREAK_LINES.forEach(([d, l]) => { if (n >= d) t = l; }); if (n > 7 && n % 7 && STREAK_LINES.every(([d]) => d !== n)) t = n + ' days in a row. You keep showing up, and it shows.'; return t; }
+  function vStreak() {
+    const r = app.streakShow; if (!r) return vBoard();
+    // this week, Monday to Sunday; days inside the streak are joined into one pill
+    const end = Date.parse(r.date + 'T00:00:00Z'), dow = (new Date(end).getUTCDay() + 6) % 7;
+    const week = Array.from({ length: 7 }, (_, i) => { const back = dow - i; return { label: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'][i], on: back >= 0 && back < r.streak, now: back === 0 }; });
+    const pills = week.map((d, i) => {
+      const prev = i > 0 && week[i - 1].on, next = i < 6 && week[i + 1].on;
+      return `<div class="wd${d.on ? ' on' : ''}${d.on && prev ? ' jl' : ''}${d.on && next ? ' jr' : ''}${d.now ? ' now' : ''}"><i>${d.on ? ICON.check : ''}</i></div>`;
+    }).join('');
+    const extra = r.got.filter(Boolean);
+    return `<div class="screen streakscreen centered">
+      <canvas class="confetti" aria-hidden="true"></canvas>
+      <p class="practice">Practice complete! <b>+${r.coins || 2} coins</b></p>
+      <div class="grow"></div>
+      <div class="bigflame" aria-hidden="true"><svg viewBox="0 0 120 140">
+        <defs>
+          <linearGradient id="flb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F26B4B"/><stop offset=".55" stop-color="#F58E45"/><stop offset="1" stop-color="#F5B841"/></linearGradient>
+          <radialGradient id="flc" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#FFF8E6"/><stop offset="1" stop-color="#FFE0A0"/></radialGradient>
+        </defs>
+        <ellipse cx="60" cy="132" rx="28" ry="5" fill="#000" opacity=".3"/>
+        <path d="M60 12C70 32 98 44 98 80C98 104 81 122 60 122S22 104 22 80C22 66 28 55 36 48C37 56 40 61 45 63C44 44 49 28 60 12Z" fill="url(#flb)" stroke="#FBE3B0" stroke-width="9" stroke-linejoin="round" paint-order="stroke"/>
+        <path d="M60 70C66 80 74 87 74 98A14 14 0 0 1 46 98C46 87 54 80 60 70Z" fill="url(#flc)"/>
+        <ellipse cx="74" cy="56" rx="6" ry="11" transform="rotate(-25 74 56)" fill="#fff" opacity=".22"/>
+      </svg></div>
+      <div class="streaknum" aria-live="polite"><b id="snum">${Math.max(0, r.streak - 1)}</b></div>
+      <p class="streakword">day streak</p>
+      <div class="weekrow"><div class="wlabels">${week.map((d) => `<span class="${d.now ? 'now' : ''}">${d.label}</span>`).join('')}</div><div class="wpills">${pills}</div></div>
+      <p class="lead streakline">${esc(streakLine(r.streak))}</p>
+      ${extra.length ? `<div class="rewards">${extra.map((x, i) => `<span class="chip" style="animation-delay:${1 + i * 0.15}s">${esc(x)}</span>`).join('')}</div>` : ''}
+      <p class="fine">${r.preview ? 'Preview · your streak isn’t changed' : 'Best streak: ' + r.best + (r.best === 1 ? ' day' : ' days')}</p>
+      <div class="grow"></div>
+      ${(() => { const t = teaser(); return t ? `<div class="teaser"><span>Coming up tomorrow</span><b>${esc(t)}</b></div>` : ''; })()}
+      <div class="grid2" style="width:100%"><button class="btn" data-act="share" data-arg="streak">Share</button><button class="btn primary" data-act="streakDone">Continue</button></div>
+    </div>`;
+  }
+  // a preview of the celebration (menu button, or open the page with #streak); it doesn't change the streak
+  function previewStreak() {
+    const g = s(), n = Math.max(7, g ? g.streak : 0);
+    app.streakShow = { streak: n, got: n % 7 === 0 ? ['A rest pass'] : [], coins: 2 + (n % 7 === 0 ? 5 : 0) + (n % 30 === 0 ? 20 : 0), best: Math.max(n, g ? g.bestStreak : 0), date: today(), preview: true };
+    app.ui = { celebrate: true }; app.screen = 'streak'; MUSIC.duck(3.6); SFX.streak();
+  }
+  // count the number up and throw confetti, once
+  function celebrate() {
+    const r = app.streakShow; if (!r) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const el = document.getElementById('snum');
+    if (el) setTimeout(() => { const n = document.getElementById('snum'); if (n) { n.textContent = r.streak; n.parentNode.classList.add('pop'); } }, reduce ? 0 : 650);
+    const cv = root.querySelector('.confetti'); if (!cv || reduce) return;
+    const ctx = cv.getContext('2d'), W = cv.width = innerWidth, H = cv.height = innerHeight;
+    const cols = ['#F26B4B', '#F5B841', '#3CC3A8', '#6F9BF2', '#F2F5F9'];
+    const bits = Array.from({ length: 140 }, () => ({ x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.35, vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 9, r: 3 + Math.random() * 4, c: cols[Math.floor(Math.random() * cols.length)], a: Math.random() * 6 }));
+    const t0 = performance.now();
+    const frame = (t) => {
+      const c2 = root.querySelector('.confetti'); if (c2 !== cv) return;
+      ctx.clearRect(0, 0, W, H);
+      bits.forEach((b) => { b.vy += 0.28; b.vx *= 0.99; b.x += b.vx; b.y += b.vy; b.a += 0.2; ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a); ctx.fillStyle = b.c; ctx.fillRect(-b.r, -b.r / 2, b.r * 2, b.r); ctx.restore(); });
+      if (t - t0 < 3200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, W, H);
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- endings ----------
+  // sample lives for previewing the two endings (#broke, #legacy); they never touch the saved game
+  function demoEnd(kind) {
+    const g = F.newLife({ name: 'Juan', age: 40, type: 'S', low: 'D', debts: ['card', 'salary', 'five6'] }, today(), 3);
+    if (kind === 'broke') { g.over = 'broke'; g.brokeInfo = { age: 42, why: 'your monthly living costs', debts: g.debts.filter((d) => d.bal > 0).map((d) => ({ name: d.name, bal: d.bal })), meter: 3, spiral: { age: 41 } }; }
+    else { g.over = 'legacy'; g.legacy = { estate: 12500000, heirs: 9800000, lost: 3750000, given: 420000, level: 9, strandsDone: 2, score: 1580 }; g.freeAge = 58; g.retired = true; g.scholars = 4; g.dreamsDone = [1, 1, 1, 0]; g.given = 420000; g.sh.mastered = true; }
+    return g;
+  }
+  function vOver() {
+    const preview = app.endPreview;
+    const g = preview ? demoEnd(preview) : s();
+    if (!g || !g.over) return vBoard();
+    const t = T[g.p.type];
+    if (g.over === 'broke') {
+      const b = g.brokeInfo;
+      return `<div class="screen">
+        <span class="kicker" style="--k:var(--bad)">Game over</span>
+        <h1 class="h1">You went broke at ${b.age}</h1>
+        <p class="lead">You couldn’t cover ${esc(b.why)}, even after selling everything you owned.</p>
+        <div class="panel"><div class="lines">
+          ${b.debts.slice(0, 4).map((d) => `<div><span>${esc(d.name)}</span><b>${S(d.bal)}</b></div>`).join('')}
+          <div class="tot"><span>The spiral started</span><b>${b.spiral ? 'at age ' + b.spiral.age : 'suddenly'}</b></div>
+          <div><span>Your shadow (${t.shadow.toLowerCase()})</span><b>${b.meter >= 3 ? 'Loud' : b.meter >= 1 ? 'Present' : 'Quiet'}</b></div>
+          <div><span>Levels reached</span><b>${F.totalLevel(g)} of 15</b></div>
+        </div></div>
+        <p class="fine">What usually helps: a safety fund before deals, insurance before emergencies, and your move: ${t.move.toLowerCase()}.</p>
+        <div class="grow"></div>
+        <div class="hermes"><p>Stay on track of your finances.</p><a class="btn wide" href="https://hermes.exoasia.org" target="_blank" rel="noopener">Go to hermes.exoasia.org</a></div>
+        ${preview ? '<button class="btn primary wide" data-act="endPreviewDone">Close preview</button>' : '<button class="btn primary wide" data-act="restart">Start a new life</button>'}
+      </div>`;
+    }
+    const L = g.legacy, story = F.lifeStory(g);
+    return `<div class="screen">
+      <span class="kicker">Happy 100th birthday, ${esc(g.p.name)}</span>
+      <h1 class="h1">Your legacy</h1>
+      <div class="panel"><div class="lines">
+        <div><span>Your estate</span><b>${S(L.estate)}</b></div>
+        <div><span>Your heirs receive</span><b class="pos">${S(L.heirs)}</b></div>
+        ${L.lost ? `<div><span>Lost without a will</span><b class="neg">${S(L.lost)}</b></div>` : ''}
+        <div><span>You gave away</span><b>${S(L.given)}</b></div>
+        <div><span>Money DNA level</span><b>${L.level} of 15</b></div>
+        <div class="tot"><span>Legacy score</span><b>${L.score.toLocaleString('en-US')}</b></div>
+      </div></div>
+      <div class="storyl">${story.slice(0, 5).map((l) => `<div>${esc(l)}</div>`).join('')}</div>
+      ${preview ? '' : '<button class="linkbtn" style="align-self:flex-start" data-act="share" data-arg="legacy">Share your legacy</button>'}
+      <div class="grow"></div>
+      <div class="hermes"><p>Stay on track of your finances.</p><a class="btn wide" href="https://hermes.exoasia.org" target="_blank" rel="noopener">Go to hermes.exoasia.org</a></div>
+      ${preview ? '<button class="btn primary wide" data-act="endPreviewDone">Close preview</button>' : '<button class="btn primary wide" data-act="restart">Live another life</button>'}
+    </div>`;
+  }
+
+  // ---------- sheets ----------
+  function sheet() {
+    const u = app.ui; if (!u.sheet) return '';
+    const g = s();
+    let k = '#F5B841', title = '', body = '';
+    if (u.sheet === 'money') { title = 'Money'; body = moneySheet(g); }
+    if (u.sheet === 'pockets') { title = 'Pockets'; k = '#6F9BF2'; body = pocketRows(); }
+    if (u.sheet === 'strands') { const st = F.STRAND_ORDER[u.page || 0]; k = SK[st].color; title = 'Your strands'; body = strandSheet(g, st); }
+    if (u.sheet === 'coins') { title = 'Coins'; body = coinSheet(g); }
+    if (u.sheet === 'dream') { title = 'Your dream'; k = '#F5B841'; body = dreamSheet(g); }
+    if (u.sheet === 'menu') { title = 'Menu'; body = menuSheet(g); }
+    if (u.sheet === 'share') { title = u.shareKind === 'legacy' ? 'Share your legacy' : 'Share your streak'; body = u.shareImg ? `<img class="shareimg" src="${u.shareImg}" alt="Your ${u.shareKind === 'legacy' ? 'legacy' : 'streak'} card"><p class="fine">On a phone, press and hold the image to save or share it.</p><button class="btn primary wide" data-act="saveShare">Save image</button>` : '<p class="lead">Making your card\u2026</p>'; }
+    if (u.sheet === 'remind') { title = 'Daily reminder'; k = '#F5B841'; const inArtifact = !!(window.claude && window.claude.use); body = `<p class="lead">Get a reminder every day at this time, so you never miss a streak.</p>
+      <a class="btn primary wide" href="${esc(googleReminderUrl())}" target="_blank" rel="noopener">Add to Google Calendar</a>
+      ${inArtifact ? '' : '<button class="btn wide" data-act="icsReminder">iPhone, Outlook or other calendar (.ics)</button>'}
+      <p class="fine">The reminder repeats daily. You can change the time in your calendar.</p>`; }
+    return `<div class="back${u.animate ? ' anim' : ''}" data-act="closeBg"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}" style="--k:${k}">
+      <div class="sh"><h2>${esc(title)}</h2><button class="close" data-act="close" aria-label="Close">${ICON.close}</button></div>
+      ${body}</div></div>`;
+  }
+  function pager(n, per, page) {
+    const pages = Math.max(1, Math.ceil(n / per));
+    if (pages <= 1) return '';
+    return `<div class="pager"><button class="btn small" data-act="page" data-arg="${page - 1}" ${page <= 0 ? 'disabled' : ''}>Previous</button><span>${page + 1} of ${pages}</span><button class="btn small" data-act="page" data-arg="${page + 1}" ${page >= pages - 1 ? 'disabled' : ''}>Next</button></div>`;
+  }
+  function moneySheet(g) {
+    const u = app.ui, tab = u.tab || 'summary', m = F.monthly(g), page = u.page || 0;
+    const tabs = `<div class="tabs" role="tablist">${[['summary', 'Summary'], ['debts', 'Debts'], ['assets', 'Assets'], ['protect', 'Protect']].map(([v, l]) => `<button role="tab" aria-selected="${tab === v}" class="${tab === v ? 'sel' : ''}" data-act="tab" data-arg="${v}">${l}</button>`).join('')}</div>`;
+    let body = '';
+    if (tab === 'summary') {
+      const c = F.card(g);
+      body = `<div class="lines">
+        <div><span>Income</span><b>${S(m.income)}</b></div>
+        <div><span>Passive income</span><b class="pos">${S(m.passive)}</b></div>
+        <div><span>Living, kids, family, insurance</span><b>−${S(m.essentials)}</b></div>
+        <div><span>Debt payments</span><b>−${S(m.debtPay)}</b></div>
+        <div class="tot"><span>Left each month</span><b class="${m.flow >= 0 ? 'pos' : 'neg'}">${S(m.flow)}</b></div>
+        <div><span>Cash</span><b>${S(g.cash)}</b></div>
+        <div><span>Safety fund</span><b>${S(g.safety)}</b></div>
+        <div><span>Credit card</span><b>${S(c.bal)} of ${S(g.cardLimit)}</b></div>
+      </div>
+      <div class="grid3">
+        <button class="btn small" data-act="mv" data-arg="safety" ${g.cash > 0 ? '' : 'disabled'}>To safety</button>
+        <button class="btn small" data-act="mv" data-arg="invest" ${g.cash > 0 ? '' : 'disabled'}>Invest</button>
+        <button class="btn small" data-act="mv" data-arg="cut" ${F.canCut(g) ? '' : 'disabled'}>Cut costs</button>
+      </div>
+      <p class="fine">To safety and Invest move half your cash. Cut costs trims 8% of living costs, once every 6 months.</p>`;
+    }
+    if (tab === 'debts') {
+      const ds = g.debts.filter((d) => d.bal > 0);
+      const shown = ds.slice(page * 4, page * 4 + 4);
+      body = ds.length ? `<div class="list">${shown.map((d) => `<div class="item"><b>${esc(d.name)}${d.bad ? '<span class="tag" style="color:var(--bad)">Bad debt</span>' : ''}</b><span>${S(d.bal)} · ${(d.rate * 100).toFixed(1)}% a month</span><button class="btn small" data-act="payDebt" data-arg="${d.id}" ${g.cash > 0 ? '' : 'disabled'}>Pay ${S(Math.min(d.bal, Math.max(0, g.cash)))}</button></div>`).join('')}</div>${pager(ds.length, 4, page)}` : `<div class="empty">No debt. Well done.</div>`;
+    }
+    if (tab === 'assets') {
+      const as = g.assets.filter((a) => a.value > 0 || a.inc > 0);
+      const shown = as.slice(page * 4, page * 4 + 4);
+      const cap = F.handsOn(g) > F.capacity(g) ? `<p class="fine" style="color:var(--amber)">You run ${F.handsOn(g)} hands-on assets, but can manage only ${F.capacity(g)} well. Each earns ${Math.round(F.attention(g) * 100)}% of its income.</p>` : '';
+      body = as.length ? `${cap}<div class="list">${shown.map((a) => `<div class="item"><b>${esc(a.name)}</b><span>${S(a.value)} · ${S(F.assetIncome(g, a))}/mo${a.hands ? ' · hands-on' : ''}</span><button class="btn small" data-act="sell" data-arg="${a.id}">Sell ${S(F.sellQuote(g, a.id))}</button></div>`).join('')}</div>${pager(as.length, 4, page)}` : `<div class="empty">No assets yet. Opportunities come up most weeks.</div>`;
+    }
+    if (tab === 'protect') {
+      const row = (k, name, sub) => g.ins[k] ? `<div class="item"><b>${name}</b><span>${S(g.ins[k])} a month</span><button class="btn small" data-act="dropIns" data-arg="${k}">Cancel</button></div>` : `<div class="item"><b>${name}</b><span>${sub}</span><button class="btn small" data-act="buyIns" data-arg="${k}">Buy ${S(F.insuranceQuote(g, k))}/mo</button></div>`;
+      body = `<div class="list">
+        ${row('health', 'Health cover (HMO)', 'Pays 80% of hospital bills')}
+        ${row('life', 'Life insurance', 'Pays your heirs at 100')}
+        ${row('asset', 'Home and property', 'Pays 80% of typhoon and fire damage')}
+        <div class="item"><b>Your will</b><span>${g.will ? 'Signed' : g.levels.grow >= 2 ? 'Fee ' + S(F.willFee(g)) : 'Unlocks at financial freedom (G2)'}</span>${g.will ? '' : `<button class="btn small" data-act="will" ${g.levels.grow >= 2 && g.cash >= F.willFee(g) ? '' : 'disabled'}>Make a will</button>`}</div>
+        ${g.levels.grow >= 3 ? `<div class="item"><b>A manager</b><span>${g.manager ? 'Hired: runs 8 hands-on assets' : 'Run 8 hands-on assets, for 15% of their income'}</span>${g.manager ? '' : '<button class="btn small" data-act="manager">Hire</button>'}</div>` : ''}
+      </div>`;
+    }
+    return tabs + body;
+  }
+  function strandSheet(g, st) {
+    const L = F.LEVELS[st], lv = g.levels[st], page = app.ui.page || 0;
+    const tabs = `<div class="tabs" role="tablist">${F.STRAND_ORDER.map((k, i) => `<button role="tab" aria-selected="${i === page}" class="${i === page ? 'sel' : ''}" data-act="page" data-arg="${i}" style="${i === page ? 'color:' + SK[k].color : ''}">${SK[k].name}</button>`).join('')}</div>`;
+    const tag = st === F.strengthStrand(g) ? `<span class="tag strong" style="--c:${SK[st].color}">Your strength</span>` : st === F.blindStrand(g) ? '<span class="tag blind">Blind spot</span>' : '';
+    return tabs + `<div class="between"><b style="font-family:var(--display);font-size:17px;color:${SK[st].color}">${SK[st].name} ${tag}</b><span class="chip">Level ${lv} of ${L.length}</span></div>
+      <div class="ladder">${L.map((x, i) => {
+        const done = i < lv, cur = i === lv, pr = cur ? F.progress(g, st, i) : null;
+        return `<div class="srow" style="--c:${SK[st].color};${done ? '' : cur ? '' : 'opacity:.6'}"><b>${x.code} ${esc(x.name)}</b><em>${done ? 'Done' : cur ? Math.round(pr.frac * 100) + '%' : 'Locked'}</em><span>${esc(x.need)}${cur ? '<br><span style="color:var(--text)">' + esc(pr.text) + '</span>' : ''}</span>${cur ? `<div style="grid-column:1/-1">${bar(pr.frac, SK[st].color)}</div>` : ''}</div>`;
+      }).join('')}</div>`;
+  }
+  function coinSheet(g) {
+    const t = today(), spent = F.spentThisMonth(g, t), d = g.day || { extraCards: 0, boughtTurns: 0 };
+    return `<div class="between"><div class="coinbig">${ICON.coin}${g.coins}</div><span class="fine" style="text-align:right">Earn coins with streaks,<br>levels and blind-spot plays.</span></div>
+      <div class="list">
+        <div class="item"><b>Extra card</b><span>One more decision this week · ${3 - d.extraCards} left today</span><button class="btn small" data-act="extraCard" ${F.canExtraCard(g) ? '' : 'disabled'}>1 coin</button></div>
+        <div class="item"><b>Extra turn</b><span>One more ${g.retired ? 'month' : 'week'} of life · ${3 - d.boughtTurns} left today</span><button class="btn small" data-act="buyTurn" ${F.canBuyTurn(g) ? '' : 'disabled'}>3 coins</button></div>
+      </div>
+      <span class="kicker">Get coins (test mode, no real payment)</span>
+      <div class="grid3">${F.COIN_PACKS.map((p, i) => `<button class="pack" data-act="buyCoins" data-arg="${i}">${p.coins} coins<span>₱${p.php}</span></button>`).join('')}</div>
+      <div class="between fine num"><span>You’ve spent ₱${spent} on coins this month.</span><span>Limit: ${g.limit ? '₱' + g.limit : 'none'}</span></div>
+      <div class="seg">${[0, 100, 300, 500].map((v) => `<button class="${g.limit === v ? 'sel' : ''}" data-act="limit" data-arg="${v}">${v ? '₱' + v : 'No limit'}</button>`).join('')}</div>`;
+  }
+  function dreamSheet(g) {
+    const d = g.dream; if (!d) return `<div class="empty">Every dream is done. What a life.</div>`;
+    const cost = F.dreamCost(g), need = Math.max(0, cost - g.pots.dream), add = Math.max(1000, Math.round(F.monthly(g).income * 0.1 / 1000) * 1000);
+    return `<span class="kicker">${F.DREAM_SIZES[d.size]} dream</span>
+      <b style="font-family:var(--display);font-size:20px">${esc(d.name)}</b>
+      <div class="lines"><div><span>Costs</span><b>${S(cost)}</b></div><div><span>In your dream pocket</span><b>${S(g.pots.dream)}</b></div><div><span>Still needed</span><b>${S(need)}</b></div></div>
+      ${bar(g.pots.dream / Math.max(1, cost), '#F5B841')}
+      <div class="grid2"><button class="btn small" data-act="dreamAdd" data-arg="${add}" ${g.cash >= add ? '' : 'disabled'}>Add ${S(add)}</button><button class="btn small primary" data-act="dreamDo" ${need <= Math.max(0, g.cash) ? '' : 'disabled'}>Make it come true</button></div>
+      <p class="fine">Dreams feed your Joy strand. Each Joy level needs a dream of the next size.</p>`;
+  }
+  function menuSheet(g) {
+    const u = app.ui;
+    return `${TEST ? `<div class="panel"><span class="kicker">Test clock</span><p class="fine">Pretend days pass, to try streaks and missed days. Today is ${esc(today())}.</p>
+        <div class="grid2"><button class="btn small" data-act="clock" data-arg="1">Next day</button><button class="btn small" data-act="clock" data-arg="3">Skip 2 days</button><button class="btn small" data-act="clock" data-arg="9">Skip 8 days</button><button class="btn small" data-act="clock" data-arg="16">Skip 15 days</button></div></div>` : ''}
+      <button class="btn small wide" data-act="previewStreak">Preview the streak celebration</button>
+      <div class="vol"><label for="vMusic">Music</label><input id="vMusic" type="range" min="0" max="100" step="5" value="${vol('musicVol')}" data-vol="musicVol"><output>${vol('musicVol') ? vol('musicVol') + '%' : 'Off'}</output></div>
+      <div class="vol"><label for="vSfx">Sound effects</label><input id="vSfx" type="range" min="0" max="100" step="5" value="${vol('sfxVol')}" data-vol="sfxVol"><output>${vol('sfxVol') ? vol('sfxVol') + '%' : 'Off'}</output></div>
+      <div class="lines"><div><span>Streak · best</span><b>${g.streak} · ${g.bestStreak} days</b></div><div><span>Rest passes</span><b>${g.passes}</b></div><div><span>Shadow (${T[g.p.type].shadow.toLowerCase()})</span><b>${g.sh.mastered ? 'Mastered' : g.sh.meter + ' of 5'}</b></div></div>
+      ${u.confirm ? `<div class="panel"><b>Start a new life? This one ends for good.</b><div class="grid2"><button class="btn small" data-act="noConfirm">Keep playing</button><button class="btn small" style="border-color:var(--bad);color:var(--bad)" data-act="restartNow">Start over</button></div></div>`
+        : `<button class="btn wide" data-act="askRestart">Start a new life</button>`}
+      <p class="fine">A game, not financial advice. Saved on this phone only.</p>`;
+  }
+
+  // ---------- render ----------
+  let lastSheet = null;
+  // Before drawing: an ended game shows its ending, a waiting card is shown, and a new day opens on the board.
+  function settleScreen() {
+    const g = s(); if (!g || app.ui.anim || app.endPreview) return;
+    if (g.over && (app.screen === 'home' || (app.screen === 'turn' && !g.card && !app.ui.result))) { app.screen = 'over'; app.ui = {}; return; }
+    if (g.over) return;
+    if (app.screen === 'home' && g.card) { app.screen = 'turn'; return; }
+    if (app.screen === 'home' && g.day && g.day.date !== today()) openToday();
+  }
+  function render() {
+    settleScreen();
+    const views = { welcome: vWelcome, consent: vConsent, intake: vIntake, mirror: vMirror, home: vBoard, turn: vTurn, away: vAway, over: vOver, streak: vStreak, dayend: vDayEnd };
+    const key = app.ui.sheet ? app.ui.sheet + (app.ui.tab || '') : null;
+    app.ui.animate = key && key !== lastSheet && !(lastSheet && app.ui.sheet && lastSheet.indexOf(app.ui.sheet) === 0);
+    lastSheet = key;
+    root.innerHTML = (views[app.screen] || vWelcome)() + sheet() + (app.ui.toast ? `<div class="toast" role="status">${app.ui.toast}</div>` : '');
+    bindDie();
+    app.ui.cardAnim = false; // the card rises once, not on every redraw
+    if (app.screen === 'streak' && app.ui.celebrate) { app.ui.celebrate = false; celebrate(); }
+    if (app.ui.anim) app.ui.anim.justLanded = false; // the die bounces once when it lands
+    const nm = document.getElementById('nm');
+    if (nm) { nm.addEventListener('input', () => { app.intake.a.name = nm.value.trim(); const b = root.querySelector('[data-act="intakeNext"]'); if (b) b.disabled = false; }); }
+    root.querySelectorAll('input[data-vol]').forEach((el) => {
+      const out = el.parentNode.querySelector('output');
+      el.addEventListener('input', () => { const v = +el.value; getCtx(); setVolume(el.dataset.vol, v); out.textContent = v ? v + '%' : 'Off'; if (el.dataset.vol === 'musicVol') { if (v > 0) musicActive(); else MUSIC.stop(); } });
+      el.addEventListener('change', () => { if (el.dataset.vol === 'sfxVol' && +el.value > 0) SFX.good(); save(); });
+    });
+    const rf = document.getElementById('reportFile');
+    if (rf) rf.addEventListener('change', () => readReport(rf.files && rf.files[0]));
+    const dn = document.getElementById('dn');
+    if (dn) dn.addEventListener('input', () => { app.intake.a.dreamName = dn.value; save(); });
+    save();
+  }
+  let toastTimer = null;
+  function toast(html) { app.ui.toast = html; clearTimeout(toastTimer); toastTimer = setTimeout(() => { app.ui.toast = null; render(); }, 3200); }
+
+  // Opening the game for the day: missed days run first, then today's headlines are applied.
+  function openToday() {
+    const g = s(); if (!g || g.over) return;
+    const rep = F.openDay(g, today());
+    const pages = [];
+    const news = g.over ? null : F.applyNews(g, feed, today());
+    if (news) news.forEach((n) => pages.push({ type: 'news', n }));
+    if (rep && rep.days > 0) pages.push({ type: 'absence', rep });
+    if (pages.length) { app.awayPages = pages; app.ui = { awayIdx: 0 }; app.screen = 'away'; }
+  }
+  // The feed arrives after first paint; show it as soon as the player is back on the home screen.
+  function maybeNews() {
+    const g = s(); if (!g || g.over || !feed || app.screen !== 'home' || g.card) return;
+    const news = F.applyNews(g, feed, today());
+    if (news) { app.awayPages = news.map((n) => ({ type: 'news', n })); app.ui = { awayIdx: 0 }; app.screen = 'away'; render(); }
+  }
+  let feed = app.feedCache || null;
+  async function loadNews() {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const db = await window.claude.use('db'); if (!db) return;
+      const snap = await db.doc('news/latest').get();
+      if (snap.exists) { feed = snap.data(); app.feedCache = feed; maybeNews(); save(); }
+    } catch (e) { /* no feed today: the game plays on without news */ }
+  }
+
+  // ---------- actions ----------
+  function nextIntake() {
+    const list = steps();
+    if (app.intake.step < list.length - 1) { app.intake.step++; return; }
+    const a = Object.assign({}, app.intake.a);
+    if (!a.name) a.name = 'Player';
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+    app.s = F.newLife(a, today(), seed);
+    app.mirror = 0; app.screen = 'mirror';
+  }
+  const ACT = {
+    go(arg) { app.screen = arg; app.ui = {}; if (arg === 'home') openToday(); },
+    restart() { app.ui = { sheet: 'menu', confirm: true }; if (!s() || s().over) { const c = app.clock; app = fresh(); app.clock = c; app.screen = 'consent'; } else { app.screen = 'home'; } },
+    askRestart() { app.ui.confirm = true; },
+    noConfirm() { app.ui.confirm = false; },
+    restartNow() { const c = app.clock; app = fresh(); app.clock = c; app.screen = 'consent'; },
+    startIntake() { app.intake = { step: 0, a: { age: 30 }, quiz: null }; app.screen = 'intake'; },
+    intakeBack() { if (app.intake.step === 0) app.screen = 'consent'; else app.intake.step--; },
+    intakeNext() { const q = steps()[app.intake.step]; if (q.kind === 'age' && app.intake.a.age == null) app.intake.a.age = 30; nextIntake(); },
+    skip() { const q = steps()[app.intake.step]; app.intake.a[q.id] = F.TYPICAL[q.id]; nextIntake(); },
+    age(d) { const a = app.intake.a; a.age = Math.max(18, Math.min(70, (a.age || 30) + +d)); },
+    pickInstead() { app.intake.pick = true; },
+    reportClear() { app.intake.report = null; },
+    reportUse() {
+      const rep = app.intake.report, a = app.intake.a; if (!rep || !rep.ok) return;
+      a.type = rep.type; a.low = rep.low; a.scores = rep.scores; a._quiz = true; // the report replaces the type and blind-spot questions
+      if (rep.name && (!a.name || a.name === 'Player')) a.name = rep.name.split(' ')[0];
+      nextIntake();
+    },
+    pickType(t) { const a = app.intake.a; a.type = t; delete a._quiz; if (a.low === t) delete a.low; nextIntake(); },
+    pickLow(t) { app.intake.a.low = t; nextIntake(); },
+    choose(v) {
+      if (app.screen === 'turn') return chooseCard(v);
+      const q = steps()[app.intake.step]; app.intake.a[q.id] = isNaN(+v) || q.id === 'name' ? v : +v; nextIntake();
+    },
+    dreamCost(i) { app.intake.a.dreamCost = +i; },
+    amt(arg) { const [k, i] = arg.split(':'); const a = app.intake.a; a.debtAmt = Object.assign({}, a.debtAmt, { [k]: +i }); },
+    toggle(v) {
+      const q = steps()[app.intake.step], a = app.intake.a; let arr = (a[q.id] || []).slice();
+      if (v === 'none') arr = arr.indexOf('none') >= 0 ? [] : ['none'];
+      else { arr = arr.filter((x) => x !== 'none'); const i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); else arr.push(v); }
+      a[q.id] = arr;
+    },
+    startQuiz() { app.intake.quiz = { i: 0, ans: [] }; },
+    quizBack() { const Q = app.intake.quiz; if (Q.i === 0) app.intake.quiz = null; else { Q.i--; Q.ans.pop(); } },
+    quizAns(t) {
+      const Q = app.intake.quiz; Q.ans.push(t);
+      if (Q.i < F.QUIZ.length - 1) { Q.i++; return; }
+      const r = F.quizScores(Q.ans), a = app.intake.a;
+      a.type = r.type; a.low = r.low; a.scores = r.scores; a._quiz = true;
+      app.intake.quiz = null;
+      toast(`<b>You’re ${T[r.type].name}</b>Your blind spot: ${T[r.low].short}.`);
+      nextIntake();
+    },
+    mirrorNext() {
+      app.mirror = (app.mirror || 0) + 1;
+      if (app.mirror === 2) {
+        // suggest pockets that fit what's left each month
+        const g = s(), m = F.monthly(g); if (F.pocketPct(g)) return;
+        const room = m.flow / Math.max(1, m.income) * 100;
+        F.setPocket(g, 'safety', room >= 15 ? 10 : 5);
+        if (room >= 10) F.setPocket(g, 'dream', 5);
+      }
+    },
+    beginLife() { F.openDay(s(), today()); app.screen = 'home'; },
+    pocket(arg) { const [k, d] = arg.split(':'); const g = s(); F.setPocket(g, k, g.pockets[k] + +d); },
+    // the die is rolled by swiping it on the board; this button path shows a waiting card, returns to the die, or flicks it
+    play() {
+      const g = s(); if (app.ui.anim) return;
+      if (g.card) { app.ui = { cardAnim: true }; app.screen = 'turn'; return; } // a card is still waiting: show it
+      if (app.screen === 'turn') { app.ui = {}; app.screen = 'home'; return; } // back to the die for the next swipe
+      flickRoll();
+    },
+    finishDay() {
+      const g = s(); const r = g.dayReward; g.dayReward = null;
+      if (!r) { app.screen = 'home'; app.ui = {}; return; }
+      app.streakShow = { streak: r.streak, got: r.got, coins: r.coins || 2, best: g.bestStreak, date: today() };
+      app.recap = Object.assign(makeRecap(g), { streak: r.streak }); app.streakShow.coins = app.recap.coins; // one coin total on both screens
+      app.ui = {}; app.screen = 'dayend'; SFX.good();
+    },
+    toStreak() { app.recap = null; app.ui = { celebrate: true }; app.screen = 'streak'; MUSIC.duck(3.6); SFX.streak(); },
+    recapDone() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} app.recap = null; app.ui = {}; app.screen = s() && !s().over ? 'home' : 'welcome'; },
+    streakDone() { if (s() && s().card) { app.streakShow = null; app.ui = {}; app.screen = 'turn'; return; } try { if (location.hash === '#streak') history.replaceState(null, '', location.pathname + location.search); } catch (e) {} app.streakShow = null; app.ui = {}; app.screen = s() && !s().over ? 'home' : 'welcome'; },
+    previewStreak() { previewStreak(); },
+    share(kind) { app.ui.sheet = 'share'; app.ui.shareKind = kind; app.ui.shareImg = null; shareImage(kind).then((u) => { if (app.ui.sheet === 'share') { app.ui.shareImg = u; render(); } }).catch(() => { app.ui.sheet = null; toast('<b>Couldn\u2019t make the image</b>Please try again.'); render(); }); },
+    saveShare() { saveShareImage(); },
+    icsReminder() { icsReminder(); },
+    endPreviewDone() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} app.endPreview = null; app.ui = {}; app.screen = s() && !s().over ? 'home' : s() && s().over ? 'over' : 'welcome'; },
+    extraCard() { const g = s(); dayLog(g); const c = F.extraCard(g); if (c) app.dayLog.spent += 1; if (c) { app.ui = { sum: null, news: [] }; app.screen = 'turn'; } },
+    buyTurn() { const g = s(); dayLog(g); if (F.buyTurn(g)) { app.dayLog.spent += 3; app.ui.sheet = null; toast('<b>Extra turn added</b>One more ' + (g.retired ? 'month' : 'week') + ' to play today.'); } },
+    buyCoins(i) { dayLog(s()); const r = F.buyCoins(s(), +i, today()); if (r.ok) app.dayLog.bought += F.COIN_PACKS[+i].coins; toast(r.ok ? '<b>Coins added</b>Test mode: no real payment was made.' : `<b>Not bought</b>${esc(r.why || '')}`); },
+    limit(v) { s().limit = +v; },
+    music() { app.music = app.music === false; if (!app.music) MUSIC.stop(); },
+    sound() { app.sound = app.sound === false; if (app.sound) SFX.good(); },
+    sheet(name) { app.ui.sheet = name; app.ui.tab = name === 'money' ? 'summary' : null; app.ui.page = 0; app.ui.confirm = false; if (name === 'strands') app.ui.page = 0; },
+    close() { app.ui.sheet = null; },
+    closeBg(_, e) { if (e.target.classList.contains('back')) app.ui.sheet = null; },
+    tab(t) { app.ui.tab = t; app.ui.page = 0; },
+    page(p) { app.ui.page = +p; },
+    mv(what) {
+      const g = s(); const half = Math.floor(Math.max(0, g.cash) / 2 / 100) * 100;
+      if (what === 'safety') { F.toSafety(g, half); toast(`<b>Moved to safety</b>${S(half)}`); }
+      if (what === 'invest') { F.investCash(g, half); toast(`<b>Invested</b>${S(half)} into your index fund.`); }
+      if (what === 'cut') { const x = F.cutCosts(g); toast(`<b>Costs cut</b>You save ${S(x)} a month.`); }
+    },
+    payDebt(id) { const g = s(); const x = F.payDebt(g, id, g.cash); toast(`<b>Paid ${S(x)}</b>`); },
+    sell(id) { const g = s(); const x = F.sellAsset(g, id); app.ui.page = 0; toast(`<b>Sold for ${S(x)}</b>`); },
+    buyIns(k) { F.buyInsurance(s(), k); toast('<b>Covered</b>The premium is now a monthly expense.'); },
+    dropIns(k) { F.dropInsurance(s(), k); },
+    will() { if (F.makeWill(s())) toast('<b>Your will is signed</b>Your heirs are protected.'); },
+    manager() { F.hireManager(s()); },
+    dreamAdd(x) { F.toDream(s(), +x); },
+    dreamDo() { const g = s(); const name = g.dream.name; if (F.fulfilDream(g)) { app.ui.sheet = null; g.news = []; toast(`<b>Dream come true</b>${esc(name)}`); } },
+    clock(n) { if (!TEST) return; app.clock = (app.clock || 0) + (+n); app.ui = {}; app.screen = 'home'; openToday(); if (app.screen === 'home') toast(`<b>It’s ${esc(today())}</b>A new day: ${F.turnsLeft(s())} turns to play.`); },
+    awayNext() { app.ui.awayIdx = (app.ui.awayIdx || 0) + 1; },
+    awayPrev() { app.ui.awayIdx = Math.max(0, (app.ui.awayIdx || 0) - 1); },
+    awayDone() { app.awayPages = null; app.ui = {}; app.screen = s() && s().over ? 'over' : 'home'; maybeNews(); },
+  };
+  // ---------- rolling the die by hand ----------
+  // The die stays in place. Dragging turns it with your finger; letting go spins it on, slowing smoothly onto the rolled face.
+  const DIE = { drag: null };
+  function dieRot() { return app.dieRot || { x: -20, y: 25, z: 0 }; }
+  function cubeEl() { return root.querySelector('.cube'); }
+  function setCube(r) { const c = cubeEl(); if (c) { c.style.transition = 'none'; c.style.transform = `rotateX(${r.x}deg) rotateY(${r.y}deg) rotateZ(${r.z}deg)`; } }
+  function flickRoll() { const ang = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 0.6; rollWith(Math.cos(ang) * sp, Math.sin(ang) * sp); }
+  function rollWith(vx, vy) {
+    const g = s(); if (!g || g.card || app.ui.anim || g.over) return;
+    dayLog(g);
+    const r = F.startTurn(g); if (!r) return;
+    app.dayLog.weeks++;
+    const cur = Object.assign({}, dieRot());
+    const a = { pos: r.from, die: r.roll, rolling: true, rx: cur.x, ry: cur.y, rz: cur.z };
+    app.ui = { anim: a }; app.screen = 'home';
+    render(); setCube(cur);
+    SFX.diceRoll();
+    const show = () => {
+      if (app.s !== g) return; // a new life was started during the roll
+      app.ui = { sum: r.sum, news: r.sum.news || [], cardAnim: true, roll: r.roll, space: F.BOARD[r.to] };
+      if (g.over) { app.ui.result = { msg: g.over === 'legacy' ? 'You turned 100.' : 'You went broke.', tone: g.over === 'legacy' ? 'good' : 'bad', news: [] }; app.ui.lastTitle = 'The end'; }
+      app.screen = 'turn'; SFX.card(); render();
+    };
+    // where the spin would naturally stop, then the nearest resting angle that shows the rolled face
+    const speed = Math.max(0.6, Math.min(3, Math.hypot(vx, vy)));
+    const spin = 540 + speed * 420;
+    const dx = -vy / (Math.hypot(vx, vy) || 1) * spin, dy = vx / (Math.hypot(vx, vy) || 1) * spin;
+    const [tx, ty] = FACE_ROT[r.roll];
+    const near = (v, t) => t + 360 * Math.round((v - t) / 360);
+    const to = { x: near(cur.x + dx, tx), y: near(cur.y + dy, ty), z: near(cur.z + (Math.random() - 0.5) * 120, 0) };
+    const D = Math.min(1700, 900 + speed * 260), t0 = performance.now();
+    const ease = (p) => 1 - Math.pow(1 - p, 3);
+    let done = false;
+    const landed = () => {
+      if (done || app.s !== g) return; done = true;
+      a.rx = to.x; a.ry = to.y; a.rz = to.z; a.rolling = false;
+      app.dieRot = { x: ((to.x % 360) + 360) % 360, y: ((to.y % 360) + 360) % 360, z: 0 };
+      render();
+      let steps = 0;
+      const hop = () => { if (app.s !== g) return; a.pos = (a.pos + 1) % F.BOARD.length; steps++; SFX.hop(steps); render(); if (steps < r.roll) setTimeout(hop, 190); else setTimeout(show, 420); };
+      setTimeout(hop, 380);
+    };
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setCube(to); setTimeout(landed, 500); return; }
+    const frame = (now) => {
+      if (done) return;
+      const p = Math.min(1, (now - t0) / D), k = ease(p);
+      a.rx = cur.x + (to.x - cur.x) * k; a.ry = cur.y + (to.y - cur.y) * k; a.rz = cur.z + (to.z - cur.z) * k;
+      setCube({ x: a.rx, y: a.ry, z: a.rz });
+      if (p < 1) requestAnimationFrame(frame); else landed();
+    };
+    requestAnimationFrame(frame);
+    setTimeout(landed, D + 200); // finishes even if the browser pauses animation frames
+  }
+  // hook up the die on the board after each render: drag to turn it, release to roll, tap or Enter for a quick roll
+  function bindDie() {
+    const el = document.getElementById('dieGrab'); if (!el) return;
+    const start = (e) => {
+      if (app.ui.anim) return;
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      const r = dieRot();
+      DIE.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, r0: { x: r.x, y: r.y, z: r.z }, pts: [{ x: e.clientX, y: e.clientY, t: performance.now() }], moved: 0 };
+      el.classList.add('grabbing');
+    };
+    const move = (e) => {
+      const d = DIE.drag; if (!d || d.id !== e.pointerId) return;
+      const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+      d.moved = Math.max(d.moved, Math.hypot(dx, dy));
+      d.pts.push({ x: e.clientX, y: e.clientY, t: performance.now() }); if (d.pts.length > 8) d.pts.shift();
+      app.dieRot = { x: d.r0.x - dy * 0.9, y: d.r0.y + dx * 0.9, z: d.r0.z };
+      setCube(app.dieRot);
+    };
+    const end = (e) => {
+      const d = DIE.drag; if (!d || d.id !== e.pointerId) return;
+      DIE.drag = null; el.classList.remove('grabbing');
+      musicActive();
+      if (d.moved < 8) { flickRoll(); return; } // a tap rolls with a random flick
+      const now = performance.now(), recent = d.pts.filter((p) => now - p.t < 120), first = recent[0] || d.pts[0], last = d.pts[d.pts.length - 1];
+      const dt = Math.max(16, last.t - first.t);
+      const vx = (last.x - first.x) / dt, vy = (last.y - first.y) / dt;
+      if (Math.hypot(vx, vy) < 0.15) { const ang = Math.atan2(last.y - d.y0, last.x - d.x0); rollWith(Math.cos(ang) * 0.7, Math.sin(ang) * 0.7); return; } // a slow drag still rolls, gently
+      rollWith(vx, vy);
+    };
+    el.addEventListener('pointerdown', start);
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', () => { DIE.drag = null; el.classList.remove('grabbing'); });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flickRoll(); } });
+  }
+
+  function chooseCard(id) {
+    const g = s(), c = g.card; if (!c) return;
+    const opt = c.choices.find((x) => x.id === id), nw0 = F.netWorth(g);
+    const r = F.choose(g, id); if (!r) return;
+    noteChoice(g, c, opt, F.netWorth(g) - nw0, (app.ui.news || []).concat(r.news || []));
+    r.news = (app.ui.news || []).concat(r.news || []).slice(0, 2);
+    app.ui.result = r; app.ui.lastTitle = c.title; app.ui.lastStrand = c.strand; app.ui.news = [];
+    if ((r.news || []).some((n) => n.kind === 'level' || n.kind === 'blind' || n.kind === 'mastered')) SFX.level(); else if (r.tone === 'good') SFX.good(); else if (r.tone === 'bad') SFX.bad(); else SFX.tap();
+  }
+  function oops(err) {
+    try { console.error(err); } catch (e) {}
+    app.ui = { toast: `<b>Something went wrong</b>${esc((err && err.message) || String(err))}. Please send Mack a screenshot.` };
+    try { if (s() && s().card) app.screen = 'turn'; render(); } catch (e) {}
+  }
+  window.addEventListener('error', (e) => oops(e.error || e.message));
+  root.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+    const fn = ACT[el.dataset.act]; if (!fn) return;
+    if (el.dataset.act === 'closeBg' && e.target !== el) return;
+    try { fn(el.dataset.arg, e); render(); } catch (err) { oops(err); }
+    musicActive(); // browsers allow sound only after a tap
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && app.ui.sheet) { app.ui.sheet = null; render(); }
+    if (e.key === 'Enter' && app.screen === 'intake') { const b = root.querySelector('[data-act="intakeNext"]'); if (b && !b.disabled) b.click(); }
+  });
+
+  function start() {
+    if (app.intake && app.intake.report && app.intake.report.reading) app.intake.report = null; // a reload interrupted reading a report
+    if (app.screen === 'dayend' && !app.recap) app.screen = 'home';
+    if (app.screen === 'streak' && !app.streakShow) app.screen = 'home';
+    if (app.s) F.upgradeSave(app.s); // older saves get any newer fields
+    // older saves used on/off switches: carry "off" over to the sliders
+    if (app.musicVol == null && app.music === false) app.musicVol = 0;
+    if (app.sfxVol == null && app.sound === false) app.sfxVol = 0;
+    if (app.screen === 'turn' && !(s() && s().card)) app.screen = 'home';
+    if (app.screen === 'home' && s() && s().card && !s().over) app.screen = 'turn'; // never strand a waiting card
+    if (app.screen === 'away' && !(app.awayPages && app.awayPages.length)) app.screen = 'home';
+    if (location.hash === '#streak') { previewStreak(); render(); loadNews(); return; }
+    if (location.hash === '#day') { app.recap = demoRecap(); app.ui = {}; app.screen = 'dayend'; render(); return; }
+    if (app.screen === 'dayend' && !app.recap) app.screen = s() ? 'home' : 'welcome';
+    if (location.hash === '#broke' || location.hash === '#legacy') { app.endPreview = location.hash.slice(1); app.ui = {}; app.screen = 'over'; render(); return; }
+    if (app.endPreview) { app.endPreview = null; if (app.screen === 'over' && !(s() && s().over)) app.screen = s() ? 'home' : 'welcome'; }
+    if (app.screen === 'home') openToday();
+    render();
+    loadNews();
+  }
+  if (window.claude && window.claude.hot) {
+    window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ app }));
+    window.claude.hot.ready ? window.claude.hot.ready((snap) => { if (snap && snap.app) app = snap.app; start(); }) : start();
+  } else start();
+})();
+</script>
+
+</body>
+</html>

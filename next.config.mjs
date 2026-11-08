@@ -16,6 +16,23 @@ const csp = [
   ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
+// Four Strands (the Money DNA board game, a static page in public/fourstrands) also needs Google Fonts
+// and pdf.js from cdnjs, which reads an uploaded Money DNA report on the player's phone.
+const gameCsp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob:",
+  "font-src 'self' https://fonts.gstatic.com",
+  `connect-src 'self'${isDev ? ' ws: wss:' : ''}`,
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  ...(isDev ? [] : ['upgrade-insecure-requests']),
+].join('; ');
+
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
@@ -43,7 +60,13 @@ const nextConfig = {
       { source: '/:path*', headers: securityHeaders },
       { source: '/admin/:path*', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
       { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'no-store' }] },
+      // later entries override the same header, so the game's policy replaces the site-wide one on its paths
+      { source: '/fourstrands', headers: [{ key: 'Content-Security-Policy', value: gameCsp }] },
+      { source: '/fourstrands/:path*', headers: [{ key: 'Content-Security-Policy', value: gameCsp }] },
     ];
+  },
+  async rewrites() {
+    return [{ source: '/fourstrands', destination: '/fourstrands/index.html' }];
   },
 };
 export default nextConfig;
