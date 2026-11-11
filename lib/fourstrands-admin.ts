@@ -1,6 +1,6 @@
 import 'server-only';
 import { supabaseAdmin } from './supabase-admin';
-import { dayKey, RANGES, type Count, type RangeKey } from './admin-data';
+import { allRows, dayKey, RANGES, type Count, type RangeKey } from './admin-data';
 import { TYPES, TYPE_ORDER, type TypeKey } from './quiz-data';
 
 // Four Strands usage for /admin/fourstrands: accounts from fourstrands_players, daily activity (players and guest phones)
@@ -22,18 +22,13 @@ async function loadAll() {
   const db = supabaseAdmin();
   const since = addDays(dayKey(new Date().toISOString()), -LOOKBACK_DAYS);
   const [players, activity, quiz] = await Promise.all([
-    db.from('fourstrands_players')
+    allRows<PlayerRow>((from, to) => db.from('fourstrands_players')
       .select('google_sub, email, name, created_at, last_seen_at, type:save->s->p->>type, turns:save->s->stats->>turns, streak:save->s->>streak, best:save->s->>bestStreak, over:save->s->>over')
-      .order('last_seen_at', { ascending: false }).limit(MAX_ROWS),
-    db.from('fourstrands_activity').select('day, actor, signed_in, device, turns_total, snapshot').gte('day', since).order('day').limit(MAX_ROWS),
-    db.from('quiz_responses').select('email').not('email', 'is', null).limit(MAX_ROWS),
+      .order('last_seen_at', { ascending: false }).order('google_sub').range(from, to), MAX_ROWS),
+    allRows<ActivityRow>((from, to) => db.from('fourstrands_activity').select('day, actor, signed_in, device, turns_total, snapshot').gte('day', since).order('day').order('actor').range(from, to), MAX_ROWS),
+    allRows<{ email: string }>((from, to) => db.from('quiz_responses').select('email').not('email', 'is', null).order('id').range(from, to), MAX_ROWS),
   ]);
-  for (const r of [players, activity, quiz]) if (r.error) throw new Error(`Could not load Four Strands data: ${r.error.message}`);
-  return {
-    players: (players.data ?? []) as unknown as PlayerRow[],
-    activity: (activity.data ?? []) as ActivityRow[],
-    quizEmails: new Set(((quiz.data ?? []) as { email: string }[]).map((q) => q.email.toLowerCase())),
-  };
+  return { players, activity, quizEmails: new Set(quiz.map((q) => q.email.toLowerCase())) };
 }
 
 const AGE_BANDS = ['Under 25', '25–34', '35–44', '45–54', '55–64', '65–79', '80–100'];

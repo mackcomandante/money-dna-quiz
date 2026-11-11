@@ -33,6 +33,22 @@ export const PROFILE_COLUMN: Record<ProfileFieldId, keyof ResponseRow> = {
 };
 
 const MAX_ROWS = 20000; // aggregation runs in memory; plenty for this quiz
+const PAGE = 1000; // Supabase's API returns at most 1,000 rows per request, whatever .limit() asks for
+
+/** Reads every row by pages of 1,000 (up to `max`). The query must have a unique order, or pages can overlap. */
+export async function allRows<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+  max = MAX_ROWS,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; from < max; from += PAGE) {
+    const { data, error } = await page(from, Math.min(from + PAGE, max) - 1);
+    if (error) throw new Error(`Could not load data: ${error.message}`);
+    rows.push(...((data ?? []) as T[]));
+    if (!data || data.length < PAGE) break;
+  }
+  return rows;
+}
 
 export function sinceDate(range: RangeKey): string | null {
   const days = RANGES[range];
@@ -41,13 +57,13 @@ export function sinceDate(range: RangeKey): string | null {
 
 /** Loads responses for the dashboard, newest first. */
 export async function loadResponses(f: Filters): Promise<ResponseRow[]> {
-  let q = supabaseAdmin().from('quiz_responses').select(COLUMNS).order('created_at', { ascending: false }).limit(MAX_ROWS);
   const since = sinceDate(f.range);
-  if (since) q = q.gte('created_at', since);
-  if (f.type) q = q.eq('primary_type', f.type);
-  const { data, error } = await q;
-  if (error) throw new Error(`Could not load responses: ${error.message}`);
-  return (data ?? []) as ResponseRow[];
+  return allRows<ResponseRow>((from, to) => {
+    let q = supabaseAdmin().from('quiz_responses').select(COLUMNS).order('created_at', { ascending: false }).order('id');
+    if (since) q = q.gte('created_at', since);
+    if (f.type) q = q.eq('primary_type', f.type);
+    return q.range(from, to);
+  });
 }
 
 export interface Count { label: string; count: number; color?: string }
@@ -149,16 +165,20 @@ export function parseListFilters(sp: Record<string, string | string[] | undefine
 
 /** Lists submissions with search, filters and paging. `all` returns every match (for CSV export). */
 export async function listResponses(f: ListFilters, all = false): Promise<{ rows: ResponseRow[]; count: number }> {
-  let q = supabaseAdmin().from('quiz_responses').select(COLUMNS, { count: 'exact' }).order('created_at', { ascending: false });
   const since = sinceDate(f.range);
-  if (since) q = q.gte('created_at', since);
-  if (f.type) q = q.eq('primary_type', f.type);
-  if (f.q) {
-    const term = f.q.replace(/[%_\\,()]/g, ' ').trim(); // keep PostgREST filter syntax and LIKE wildcards out of the search
+  const term = f.q.replace(/[%_\\,()]/g, ' ').trim(); // keep PostgREST filter syntax and LIKE wildcards out of the search
+  const query = () => {
+    let q = supabaseAdmin().from('quiz_responses').select(COLUMNS, { count: 'exact' }).order('created_at', { ascending: false }).order('id');
+    if (since) q = q.gte('created_at', since);
+    if (f.type) q = q.eq('primary_type', f.type);
     if (term) q = q.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
+    return q;
+  };
+  if (all) {
+    const rows = await allRows<ResponseRow>((from, to) => query().range(from, to));
+    return { rows, count: rows.length };
   }
-  q = all ? q.limit(MAX_ROWS) : q.range((f.page - 1) * PAGE_SIZE, f.page * PAGE_SIZE - 1);
-  const { data, count, error } = await q;
+  const { data, count, error } = await query().range((f.page - 1) * PAGE_SIZE, f.page * PAGE_SIZE - 1);
   if (error) throw new Error(`Could not load submissions: ${error.message}`);
   return { rows: (data ?? []) as ResponseRow[], count: count ?? 0 };
 }

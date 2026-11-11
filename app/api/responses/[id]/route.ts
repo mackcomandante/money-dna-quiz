@@ -74,15 +74,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const db = supabaseAdmin();
   const { data: row, error: readErr } = await db
     .from('quiz_responses')
-    .select('id, created_at, email, primary_type, score_d, score_i, score_s, score_c')
+    .select('id, created_at, email, full_name, email_sent_at, primary_type, score_d, score_i, score_s, score_c')
     .eq('id', id)
     .maybeSingle();
 
   if (readErr || !row) return Response.json({ error: 'Not found' }, { status: 404 });
-  if (row.email) return Response.json({ error: 'An email is already attached to this result' }, { status: 409 });
+  // The same address may try again while its report hasn't been sent yet (the first send failed).
+  const retry = row.email === email && !row.email_sent_at;
+  if (row.email && !retry) return Response.json({ error: 'An email is already attached to this result' }, { status: 409 });
   if (Date.now() - new Date(row.created_at).getTime() > EDIT_WINDOW_MS) {
     return Response.json({ error: 'This result has expired. Please retake the quiz.' }, { status: 410 });
   }
+  if (retry) return sendAndMark(db, id, email, row);
 
   // One assessment per email (emails are stored lowercased). The unique index on lower(email) also guards against races.
   const { data: original } = await db
@@ -113,8 +116,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return Response.json({ error: 'Could not save your email' }, { status: 500 });
   }
 
-  const sent = await emailReport(email, { ...row, full_name: fullName });
-  if (sent) await db.from('quiz_responses').update({ email_sent_at: new Date().toISOString() }).eq('id', id);
+  return sendAndMark(db, id, email, { ...row, full_name: fullName });
+}
 
+async function sendAndMark(db: ReturnType<typeof supabaseAdmin>, id: string, email: string, row: ReportRow) {
+  const sent = await emailReport(email, row);
+  if (sent) await db.from('quiz_responses').update({ email_sent_at: new Date().toISOString() }).eq('id', id);
   return Response.json({ ok: true, sent });
 }

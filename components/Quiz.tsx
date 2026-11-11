@@ -173,6 +173,8 @@ export default function Quiz() {
         if (data.notice) { setNotice(data.error); return; }
         throw new Error(data.error || 'Could not send your profile. Try again.');
       }
+      const data = await res.json().catch(() => ({}));
+      if (data.sent === false) throw new Error("We saved your email but couldn't send the report just now. Tap Send to try again.");
       setView('sent');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
@@ -237,6 +239,7 @@ export default function Quiz() {
             <div className="grow" />
             <Dots at={0} />
             <button type="button" className="btn" style={{ flex: 'none', height: 56 }} onClick={next}>Find out my Money DNA</button>
+            <a className="btn-outline" style={{ flex: 'none' }} href="/fourstrands">Play Four Strands</a>
             <span className="center" style={{ fontSize: 12, color: 'var(--dim)' }}>From the book Money DNA by Mack Comandante</span>
           </section>
         );
